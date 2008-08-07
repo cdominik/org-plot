@@ -1,0 +1,26 @@
+org-plot.el --- Plotting from within org-mode
+
+Currently this provides functions for dumping information from
+org-mode tables to gnuplot.  Hopefully as this becomes more
+general/stable it will be incorporated into org-mode.
+
+See:
+ Emacs        | http://www.gnu.org/software/emacs/ 
+ Orgmode      | http://orgmode.org/
+ Gnuplot      | http://www.gnuplot.info/
+ Gnuplot-Mode | http://cars9.uchicago.edu/~ravel/software/gnuplot-mode.html
+
+Instillation:
+1. install requirements:
+   - Emacs
+   - Org-Mode (included in recent versions of Emacs)
+   - Gnuplot
+   - Gnuplot-Mode
+2. open the file example.org located in this directory, and follow
+   instruction to load org-plot.el, and begin viewing graphs of your
+   org data
+
+Collaboration:
+If you have any ideas suggestions questions or code you would like to
+share please let me know, or just fork this repository and get
+cracking.
