@@ -1,11 +1,7 @@
 ;;; org-plot.el --- support for plotting from org-mode
 
-;; Copyright (C) 2008 Eric Schulte
-
 ;; Author: Eric Schulte <schulte dot eric at gmail dot com>
-;; Keywords: outlines, hypermedia, calendar, wp
-;; Homepage: http://orgmode.org
-;;
+
 ;; This file is Not part of GNU Emacs.
 
 ;;; Comments:
