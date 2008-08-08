@@ -10,16 +10,6 @@
 
 ;;; Comments:
 
-;; would be nice to have a way to save a macro, and apply it to every
-;; cell in a table or column
-;;
-;; plotting functions should work with any list of data, not just
-;; tables... would probably want to plot from...
-;; - tables
-;; - results of property searches
-;; - comma/tab seperated strings
-;; - arbitrary lisp lists
-
 ;;; Code:
 (require 'org)
 

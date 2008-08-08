@@ -1,0 +1,149 @@
+# -*- mode: org -*-
+IDEAS/TODO:
+
+* tasks
+
+** TODO allow plotting values from
+plotting functions should work with any list of data, not just
+tables... would probably want to plot from...
+- tables
+- elisp lists
+- results of property searches
+- comma/tab seperated strings
+
+** TODO use headers for labels
+currently we are already dropping table headers, but it would be nice
+if we could pull them automatically from tables, and use them to label
+our graphs.
+
+shouldn't be too hard, see [[file:~/emacs/install/org/org-mode/lisp/org-table.el::Do%20we%20have%20a%20heading%20section%20If%20so%20format%20it%20and%20handle%20the][org-table.el-handles-headers]]
+
+** TODO define plotting links
+these should find nearby tables and plot from them
+
+** TODO add reading of parameters from elsewhere in the org-file
+either from a comment line, or from header properties
+
+*** comment lines
+I can see good ways to specify parameters for a plot that would be quite
+consistent with how Org deals with such things in similar situations.
+
+1. A special comment line in the buffer, directly before the table, like
+
+#+PLOT: table-to-gnuplot :xcol 1 :ycols (2 4 5 6) :title "Some string"
+
+or
+
+#+PLOT: table-to-R :script "/path/to/script"
+
+The command can read these by macthing
+
+(if (looking-at "#+PLOT: +\\([^ \t\r\n]+\\)\\( +.*\\)?")
+     (let* ((func (intern (match-string 1)))
+	   (params-plist
+	    (if (match-end 2)
+		(read (concat "(" (match-string 2 format) ")")))))
+
+2. Use inherited properties to specify plotting parameters in a tree.
+
+
+*** header properties
+ > (defun org-table-gnuplot (params)
+ > 
+ > and params can be a property list of arbitrary size with properties like
+ > 
+ > :title "string"
+ > :xcol N
+ > :ycols (n1 n2 n3)
+ > :labelrow N
+ > 
+ > etc etc.  This you could use to expose any amount of gnuplot options  
+ > you would want.
+
+this would just use the org-entry-get PLOT_TITLE etc...
+
+
+* mailing list discussion
+** second
+mainly just cut/pasted from mailing list discussion
+
+ > 
+ > 1) Would it ever make sense to graph/plot information which is not in
+ >    an org-table, if so how would that information be stored?
+ >   - function or equation in the gnuplot link
+ >   - array of values in the link
+ >   - latex function (cringe)
+ >   - elsewhere
+ > 2) It seems that it may be useful to automatically generate/update
+ >    plots during publication of org-files to latex or html
+ > 3) Currently I find it very useful to be able to see an initial plot
+ >    of a table with a single command, however there should be a sliding
+ >    scale from ease of plotting to greater control over the final plot.
+ >    Maybe through specification of gnuplot options through properties,
+ >    or simply specification of a gnuplot script.
+First of all, I do believe it would be good to move the plotting
+settings to outside the table, either before or after.
+
+I can see good ways to specify parameters for a plot that would be quite
+consistent with how Org deals with such things in similar situations.
+
+1. A special comment line in the buffer, directly before the table, like
+
+#+PLOT: table-to-gnuplot :xcol 1 :ycols (2 4 5 6) :title "Some string"
+
+or
+
+#+PLOT: table-to-R :script "/path/to/script"
+
+The command can read these by macthing
+
+(if (looking-at "#+PLOT: +\\([^ \t\r\n]+\\)\\( +.*\\)?")
+     (let* ((func (intern (match-string 1)))
+	   (params-plist
+	    (if (match-end 2)
+		(read (concat "(" (match-string 2 format) ")")))))
+
+2. Use inherited properties to specify plotting parameters in a tree.
+
+ > 4) also clearly R is another plotting library of interest, how should
+ >    different libraries be handled.
+ > 5) would application of more powerful libraries like R to org-tables
+ >    be useful as an alternative to calc, or is this beginning to look
+ >    like a kitchen sink
+
+** first
+
+ > > 1) titling the graph lines, by their column headers (when present)
+ > > 2) exposing some of the gnuplot options (with lines, with bars, title,
+ > >   lt, etc...), the only problem there is how to expose them without
+ > >   cluttering the interface
+ > > 3) probably there are some more which would be useful...
+ > 
+ > 
+ > The best way to make this extensible is to use a property list as a  
+ > parameter to the function that creates the plot.
+ > 
+ > 
+ > like this:
+ > 
+ > (defun org-table-gnuplot (params)
+ > 
+ > and params can be a property list of arbitrary size with properties like
+ > 
+ > :title "string"
+ > :xcol N
+ > :ycols (n1 n2 n3)
+ > :labelrow N
+ > 
+ > etc etc.  This you could use to expose any amount of gnuplot options  
+ > you would want.
+ > 
+ > Other ideas:
+ > 
+ > - I think it might be better if the link can be just before or after a  
+ > table, so we could make the function search forward to the next table  
+ > and use that.
+ > 
+ > - instead of using elisp links, we could define a new link type  
+ > gnuplot: to do this.  Not required, but might make things more compact  
+ > and clean.
