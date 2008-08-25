@@ -15,47 +15,81 @@
   (message (format "%S" el))
   el)
 
+;;--------------------------------------------------------------------------------
+;; org-plot/gnuplot options
+
+;;  Gnuplot options accessible through `org-plot', common options
+;; are specifically supported, while all other options are
+;; accessible through specification of generic script lines, or
+;; specification of custom script files.  Possible options are...
+;; 
+;; set: ---------- specify any gnuplot option to be set when graphing
+;; title: -------- specify the title of the plot
+;; xcol: --------- specify which column of the table to use as the x
+;;                 axis
+;; ycols: -------- specify (as a comma seperated list with no spaces)
+;;                 which columns of the table to graph against the
+;;                 xcol (defaults to all other columns)
+;; type: --------- specify whether the plot will be '2d' '3d or
+;;                 'grid'
+;; with: --------- specify a with option to be inserted for every
+;;                 col being plotted (e.g. lines, points, boxes,
+;;                 impulses, etc...) defaults to 'lines'
+;; file: --------- if you want to plot to a file specify the path to
+;;                 the desired output file
+;; labels: ------- list of labels to be used for the ycols (defaults
+;;                 to column headers if they exist)
+;; line ---------- specify an entire line to be inserted in the
+;;                 gnuplot script
+;; script: ------- if you want total controll you can specify a
+;;                 script file which will be used to plot, before
+;;                 plotting every instance of $datafile in the
+;;                 specified script will be replaced with the path
+;;                 to the generated data file.  Note even if you set
+;;                 this option you may still want to specify the
+;;                 plot type, as that can impact the content of the
+;;                 data file.
+
 (defvar org-plot/gnuplot-default-options
   '((:plot-type . "2d")
     (:with . "lines")
-    (:xcol . 1))
-  "Gnuplot options accessible through `org-plot', common options
-are specifically supported, while all other options are
-accessible through specification of generic script lines, or
-specification of custom script files.  Possible options are...
+    (:xcol . 0)))
 
-plot-type: ---- specify whether the plot will be '2d' '3d or
-                'grid'
-
-script: ------- if you want total controll you can specify a
-                script file which will be used to plot, before
-                plotting every instance of $datafile in the
-                specified script will be replaced with the path
-                to the generated data file.  Note even if you set
-                this option you may still want to specify the
-                plot type, as that can impact the content of the
-                data file.
-
-set: ---------- specify a gnuplot option to be set when graphing
-
-title: -------- specify the title of the plot
-
-xcol: --------- specify which column of the table to use as the x
-                axis
-
-ycols: !------- specify which columns of the table to plot on the
-                y axis, default to all cols aside from the xcol
-
-with: --------- specify a with option to be inserted for every
-                col being plotted (e.g. lines, points, boxes,
-                impulses, etc...) defaults to 'lines'
-
-output-file: -- if you want to plot to a file specify the path to
-                the desired output file
-
-col-labels: --- list of labels to be used for the ycols (defaults
-                to column headers if they exist)
-")
+(defun org-plot/add-options-to-plist (p options)
+  "Parse an OPTONS line and set values in the property list P."
+  (let (o)
+    (when options
+      (let ((op '(("type"     . :plot-type)
+		  ("script"   . :script)
+		  ("line"     . :line)
+		  ("set"      . :set)
+		  ("title"    . :title)
+		  ("xcol"     . :xcol)
+		  ("ycols"    . :ycols)
+		  ("with"     . :with)
+		  ("file"     . :file)
+		  ("labels"   . :labels)))
+	    (multiples '("set" "line"))
+	    (regexp ":\\([\"(][^\")]+?[\")]\\|[^ \t\n\r;,.]*\\)")
+	    (start 0)
+	    o)
+	(while (setq o (pop op))
+	  (if (member (car o) multiples) ;; keys with multiple values
+	      (while (string-match
+		      (concat (regexp-quote (car o)) regexp)
+		      options start)
+		(setq start (match-end 0))
+		(setq p (plist-put p (cdr o)
+				   (cons (car (read-from-string
+					       (match-string 1 options)))
+					 (plist-get p (cdr o)))))
+		p)
+	    (if (string-match (concat (regexp-quote (car o)) regexp)
+			      options)
+		(setq p (plist-put p (cdr o)
+				   (car (read-from-string
+					 (match-string 1 options)))))))))))
+  p)
 
 ;;--------------------------------------------------------------------------------
 ;; utility
@@ -72,33 +106,33 @@ found."
 		  (< 0 (forward-line 1)))))
   (goto-char (org-table-begin)))
 
+;; should use something like the below
 (defun org-plot/collect-options (&optional params)
   (interactive)
-  (let (a (start 0) (line (thing-at-point 'line)))
-    (save-match-data
-      (when (string-match "#\\+PLOT: +\\([^\r\n]+\\)$" line)
-	(setq a (match-string 1 line))
-	(while (string-match
-		":\\([^ \t\r\n]+\\) +\\([^:\r\n]+\\)"
-		a start)
-	  (setq key (match-string 1 a) value (match-string 2 a)
-		start (match-end 0)
-		params (plist-put params (intern key) value)))))
-    params))
+  (let ((line (thing-at-point 'line)))
+    (if (string-match "#\\+PLOT: +\\(.*\\)$" line)
+	(org-plot/add-options-to-plist params (match-string 1 line))
+      params)))
+
+;; follow this form for collecting options, only difference is would
+;; like to allow values with spaces to be positioned inside of ""s,
+;; maybe it would be possible to performs some sort of regexp-replace
+;; (or just wrap it in parenthesis), and then read the whole option
+;; line in as a string...
 
 (defun org-plot/header-labels ()
   (interactive)
   (save-excursion
     (let ((beg (org-table-begin))
 	  (end (org-table-end))
-	  col-labels)
+	  labels)
       (when (and (goto-char beg)
 		 (re-search-forward org-table-dataline-regexp end t)
 		 (re-search-forward org-table-hline-regexp end t)
 		 (move-beginning-of-line 0))
 	(dotimes (col (org-plot/table-cols))
-	  (setf col-labels (cons (org-table-get-field (+ 1 col)) col-labels))))
-      (reverse col-labels))))
+	  (setf labels (cons (org-table-get-field (+ 1 col)) labels))))
+      (reverse labels))))
 
 (defun org-plot/gnuplot-to-2d-data (data-file)
   (save-excursion
@@ -112,48 +146,77 @@ found."
       (org-table-export data-file (format "orgtbl-to-tsv :skip %d" skip)))))
 
 (defun org-plot/gnuplot-to-3d-data (data-file)
+  
   )
 
 (defun org-plot/gnuplot-to-grid-data (data-file)
-  )
+  (interactive)
+  (let* ((beg (org-table-begin)) (end (- (org-table-end) 2))
+	 (data-beg (if (and (goto-char beg)
+			    (re-search-forward org-table-dataline-regexp end t)
+			    (re-search-forward org-table-hline-regexp end t)
+			    (re-search-forward org-table-dataline-regexp end t))
+		       (match-beginning 0) beg))
+	 (rows (+ 1 (- (line-number-at-pos end) (line-number-at-pos beg)))))
+    (message
+     (format "beg=%d end=%d rows=%d" (line-number-at-pos beg) (line-number-at-pos end) rows))
+    (save-excursion (org-table-copy-region beg end))
+    ;; write copied region to temp buffer
+    (with-temp-buffer
+      (insert "||") (goto-char 2)
+      (org-mode) (org-return) (goto-char 2)
+      (org-table-paste-rectangle)
+      ;; save table to gnuplot format
+      (org-plot/grid data-file))
+    (with-temp-buffer
+      ;; plot table
+      (insert (org-plot/gnuplot-3d-script rows file))
+      ;; graph table
+      (gnuplot-mode) (gnuplot-send-buffer-to-gnuplot)
+      (switch-to-buffer-other-window "*gnuplot*")
+      (bury-buffer "*gnuplot*") (delete-window)
+      (delete-file data-file))))
 
-(defun org-plot/gnuplot-script (params)
-  (let* ((cols (save-excursion
-		 (goto-char (org-table-end))
-		 (backward-char 3)
-		 (org-table-current-column)))
-	 (with (or (plist-get params :with)
+(defun org-plot/gnuplot-script (data-file num-cols params)
+  (let* ((with (or (plist-get params :with)
 		   (and (or (equal type '3d)
 			    (equal type 'grid))
 			"pm3d")))
 	 (type (intern (plist-get params :plot-type)))
-	 (set (plist-get params :set))
+	 (sets (plist-get params :set))
+	 (lines (plist-get params :line))
 	 (title (plist-get params :title))
-	 (output-file (plist-get params :output-file))
+	 (file (plist-get params :file))
 	 (xcol (plist-get params :xcol))
-	 (col_labels (plist-get params :col-labels))
+	 (ycols (if (plist-member params :ycols)
+		    (debug (plist-get params :ycols))))
+	 (col_labels (plist-get params :labels))
 	 (plot-str "'%s' using %s:%d with %s title '%s'")
-	 (script "") plot-lines)
+	 (script "reset") plot-lines)
     (flet ((add-to-script (line) (setf script (format "%s\n%s" script line))))
+      (when file ;; output file
+	(add-to-script (format "set term %s" (file-name-extension file)))
+	(add-to-script (format "set output %s" file)))
       (unless (equal type '2d) ('grid (add-to-script "set pm3d"))) ;; type
-      (when set ;; set
-	(mapcar
-	 (lambda (pair)
-	   (setf script (format "%s\nset %s %s" script (car pair) (cdr pair))))
-	 set))
-      (when title (setf script (format "%s\nset title %s" script title))) ;; title
-      ;; output_file
-      (when output-file
-
-	
-	
-	)
-
-      (dotimes (col (+ 1 num-cols))
-	(unless (or (and x-col (equal col x-col)) (equal col 0))
-	  (setf script (cons (format plot-str file (or (and x-col (format "%d" x-col)) "") col col) script))))
-      (concat "plot " (mapconcat 'identity (reverse script) "\\\n    ,"))
-      )))
+      (when title (add-to-script (format "set title '%s'" title))) ;; title
+      (when lines (mapcar (lambda (el) (add-to-script el)) lines)) ;; line
+      (when sets ;; set
+	(mapcar (lambda (el) (add-to-script (format "set %s" el))) sets))
+      (dotimes (col num-cols) ;; plot command
+	(unless (or (and xcol (equal (+ 1 col) xcol))
+		    (and ycols (not (member (+ 1 col) ycols))))
+	  (debug (list col xcol))
+	  (setf plot-lines
+		(cons (format plot-str
+			      data-file
+			      (or (and xcol (format "%d" xcol)) "")
+			      (+ 1 col)
+			      with
+			      (or (nth col col_labels) (format "%d" (+ 1 col))))
+		      plot-lines))))
+      (add-to-script
+       (concat "plot " (mapconcat 'identity (reverse plot-lines) "\\\n    ,")))
+      (debug script))))
 
 ;;--------------------------------------------------------------------------------
 ;; gnuplot integration into org tables
@@ -175,15 +238,20 @@ line directly before or after the table."
     (save-excursion ;; before table
       (while (and (equal 0 (forward-line -1))
 		  (looking-at "#\\+"))
-	(setf params (org-plot/collect-options params))))
+	(setf params (debug (org-plot/collect-options params)))))
     (save-excursion ;; after table
       (goto-char (org-table-end))
       (while (and (equal 0 (forward-line 1))
 		  (looking-at "#\\+"))
 	(setf params (org-plot/collect-options params))))
+    (debug params)
     ;; if headers set them as column labels in params
-    (setf params (plist-put params :col_labels (org-plot/header-labels)))
-    (let ((data-file (make-temp-file "org-plot")))
+    (setf params (plist-put params :labels (org-plot/header-labels)))
+    (let ((data-file (make-temp-file "org-plot"))
+	  (num-cols (save-excursion
+		      (goto-char (org-table-end))
+		      (backward-char 3)
+		      (org-table-current-column))))
       ;; get the data from the table (very different for 3d)
       (case (intern (plist-get params :plot-type))
 	('2d   (org-plot/gnuplot-to-2d-data   data-file))
@@ -192,12 +260,12 @@ line directly before or after the table."
       ;; write script
       (with-temp-buffer
 	;; write script
-	(if (plist-get :script) ;; user script
+	(if (plist-get params :script) ;; user script
 	    (progn (insert-file-contents)
 		   (goto-char (point-min))
 		   (while (re-search-forward "$datafile" nil t)
 		     (replace-match data-file nil nil)))
-	  (insert (org-plot/gnuplot-script params)))
+	  (insert (org-plot/gnuplot-script data-file num-cols params)))
 	;; graph table
 	(gnuplot-mode)
 	(gnuplot-send-buffer-to-gnuplot))
@@ -230,29 +298,7 @@ column, top-down (like reading japanese) ."
 
 ;;; plot grids of data
 (defun org-plot/rest ()
-  (interactive)
-  (let* ((beg (point))
-	 (end (- (org-table-end) 2))
-	 (rows (+ 1 (- (line-number-at-pos end) (line-number-at-pos beg))))
-	 (file (make-temp-file "plot-grid")))
-    (message
-     (format "beg=%d end=%d rows=%d" (line-number-at-pos beg) (line-number-at-pos end) rows))
-    (save-excursion (org-table-copy-region beg end))
-    ;; write copied region to temp buffer
-    (with-temp-buffer
-      (insert "||") (goto-char 2)
-      (org-mode) (org-return) (goto-char 2)
-      (org-table-paste-rectangle)
-      ;; save table to gnuplot format
-      (org-plot/grid file))
-    (with-temp-buffer
-      ;; plot table
-      (insert (org-plot/gnuplot-3d-script rows file))
-      ;; graph table
-      (gnuplot-mode) (gnuplot-send-buffer-to-gnuplot)
-      (switch-to-buffer-other-window "*gnuplot*")
-      (bury-buffer "*gnuplot*") (delete-window)
-      (delete-file file))))
+)
 
 (defun org-plot/gnuplot-3d-script (num-rows file)
   (concat "set pm3d map"
