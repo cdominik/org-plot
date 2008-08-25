@@ -2,6 +2,51 @@
 IDEAS/TODO:
 
 * tasks
+(roughly in order)
+
+** TODO overview
+
+structure
+
+org-plot/gnuplot
+----------------
+find the information to be plotted, and orchestrate the dumping of
+data, and creation of gnuplot scripts
+1) get and parse the params
+2) find the nearest table
+3) call function to get data from the table (along with labels for
+   rows columns etc...)
+4) call function to create the data file
+5) call function to create the script
+6) call the script
+7) restore the windows etc...
+
+org-plot/nearest-table
+----------------------
+position point inside the nearest table
+
+org-plot/parse-table
+--------------------
+get the labels, headers, and data from the table
+
+org-plot/dump-to-datafile
+-------------------------
+take the data (rows, columns, and cell insides) along with headers,
+labels, etc... and dump to a gnuplot data file
+
+org-plot/write-gnuplot-script
+-----------------------------
+write the script for gnuplot
+
+** TODO plotting functions should accept a parameters list
+ > (defun org-table-gnuplot (params)
+ > 
+ > and params can be a property list of arbitrary size with properties like
+ > 
+ > :title "string"
+ > :xcol N
+ > :ycols (n1 n2 n3)
+ > :labelrow N
 
 ** TODO allow plotting values from
 plotting functions should work with any list of data, not just
@@ -18,11 +63,12 @@ our graphs.
 
 shouldn't be too hard, see [[file:~/emacs/install/org/org-mode/lisp/org-table.el::Do%20we%20have%20a%20heading%20section%20If%20so%20format%20it%20and%20handle%20the][org-table.el-handles-headers]]
 
-** TODO define plotting links
-these should find nearby tables and plot from them
-
 ** TODO add reading of parameters from elsewhere in the org-file
 either from a comment line, or from header properties
+
+how are the html export parameters read?
+
+first lets just get the options working on the actual plotting end...
 
 *** comment lines
 I can see good ways to specify parameters for a plot that would be quite
@@ -62,6 +108,9 @@ The command can read these by macthing
 
 this would just use the org-entry-get PLOT_TITLE etc...
 
+** TODO save-restore frame-layout
+see how this is done by org-export and copy...
+
 
 * mailing list discussion
 ** second
@@ -95,7 +144,7 @@ or
 
 #+PLOT: table-to-R :script "/path/to/script"
 
-The command can read these by macthing
+The command can read these by matching
 
 (if (looking-at "#+PLOT: +\\([^ \t\r\n]+\\)\\( +.*\\)?")
      (let* ((func (intern (match-string 1)))

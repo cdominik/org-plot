@@ -8,55 +8,204 @@
 
 ;;; Code:
 (require 'org)
+(require 'org-exp)
+(require 'gnuplot)
 
-;; gnuplot integration into org tables
-(defun org-plot/gnuplot (&optional x-col)
-  "Plot the current table using gnuplot.  Use a prefix argument
-to specify a column to use for the x-coordinates, to use the row
-number for the x-coordinates provide a prefix argument of 0."
-  (interactive "p")
-  (unless (org-at-table-p)
-    (error "No table at point"))
-  (require 'org-exp)
-  (require 'gnuplot)
-  (org-table-align) ;; make sure we have everything we need
-  (let* ((beg (org-table-begin))
-	 (end (org-table-end))
-	 (cols (save-excursion
-		 (goto-char end)
+(defun debug (el)
+  (message (format "%S" el))
+  el)
+
+(defvar org-plot/gnuplot-default-options
+  '((:plot-type . "2d")
+    (:with . "lines")
+    (:xcol . 1))
+  "Gnuplot options accessible through `org-plot', common options
+are specifically supported, while all other options are
+accessible through specification of generic script lines, or
+specification of custom script files.  Possible options are...
+
+plot-type: ---- specify whether the plot will be '2d' '3d or
+                'grid'
+
+script: ------- if you want total controll you can specify a
+                script file which will be used to plot, before
+                plotting every instance of $datafile in the
+                specified script will be replaced with the path
+                to the generated data file.  Note even if you set
+                this option you may still want to specify the
+                plot type, as that can impact the content of the
+                data file.
+
+set: ---------- specify a gnuplot option to be set when graphing
+
+title: -------- specify the title of the plot
+
+xcol: --------- specify which column of the table to use as the x
+                axis
+
+ycols: !------- specify which columns of the table to plot on the
+                y axis, default to all cols aside from the xcol
+
+with: --------- specify a with option to be inserted for every
+                col being plotted (e.g. lines, points, boxes,
+                impulses, etc...) defaults to 'lines'
+
+output-file: -- if you want to plot to a file specify the path to
+                the desired output file
+
+col-labels: --- list of labels to be used for the ycols (defaults
+                to column headers if they exist)
+")
+
+;;--------------------------------------------------------------------------------
+;; utility
+(defun org-plot/goto-nearest-table ()
+  "Move the point to the beginning of nearest table.  First look
+back until hitting an empty line, then forward until a table is
+found."
+  (interactive)
+  (move-beginning-of-line 1)
+  (while (not (or (org-at-table-p) ;; backwards
+		  (> 0 (forward-line -1))
+		  (equal (length (thing-at-point 'line)) 1))))
+  (while (not (or (org-at-table-p) ;; forwards
+		  (< 0 (forward-line 1)))))
+  (goto-char (org-table-begin)))
+
+(defun org-plot/collect-options (&optional params)
+  (interactive)
+  (let (a (start 0) (line (thing-at-point 'line)))
+    (save-match-data
+      (when (string-match "#\\+PLOT: +\\([^\r\n]+\\)$" line)
+	(setq a (match-string 1 line))
+	(while (string-match
+		":\\([^ \t\r\n]+\\) +\\([^:\r\n]+\\)"
+		a start)
+	  (setq key (match-string 1 a) value (match-string 2 a)
+		start (match-end 0)
+		params (plist-put params (intern key) value)))))
+    params))
+
+(defun org-plot/header-labels ()
+  (interactive)
+  (save-excursion
+    (let ((beg (org-table-begin))
+	  (end (org-table-end))
+	  col-labels)
+      (when (and (goto-char beg)
+		 (re-search-forward org-table-dataline-regexp end t)
+		 (re-search-forward org-table-hline-regexp end t)
+		 (move-beginning-of-line 0))
+	(dotimes (col (org-plot/table-cols))
+	  (setf col-labels (cons (org-table-get-field (+ 1 col)) col-labels))))
+      (reverse col-labels))))
+
+(defun org-plot/gnuplot-to-2d-data (data-file)
+  (save-excursion
+    (let* ((beg (org-table-begin)) (end (org-table-end))
+	   (data-beg (if (and (goto-char beg)
+			      (re-search-forward org-table-dataline-regexp end t)
+			      (re-search-forward org-table-hline-regexp end t)
+			      (re-search-forward org-table-dataline-regexp end t))
+			 (match-beginning 0) beg))
+	   (skip (- (line-number-at-pos data-beg) (line-number-at-pos beg))))
+      (org-table-export data-file (format "orgtbl-to-tsv :skip %d" skip)))))
+
+(defun org-plot/gnuplot-to-3d-data (data-file)
+  )
+
+(defun org-plot/gnuplot-to-grid-data (data-file)
+  )
+
+(defun org-plot/gnuplot-script (params)
+  (let* ((cols (save-excursion
+		 (goto-char (org-table-end))
 		 (backward-char 3)
 		 (org-table-current-column)))
-	 (data-beg (if (and 
-			(goto-char beg)
-			(re-search-forward org-table-dataline-regexp end t)
-			(re-search-forward org-table-hline-regexp end t)
-			(re-search-forward org-table-dataline-regexp end t))
-		       (match-beginning 0)
-		     beg))
-	 (skip (- (line-number-at-pos data-beg) (line-number-at-pos beg)))
-	 (exp-format (format "orgtbl-to-tsv :skip %d" skip))
-	 (file (make-temp-file "org-plot")))
-    ;; export table
-    (org-table-export file exp-format)
-    (with-temp-buffer
+	 (with (or (plist-get params :with)
+		   (and (or (equal type '3d)
+			    (equal type 'grid))
+			"pm3d")))
+	 (type (intern (plist-get params :plot-type)))
+	 (set (plist-get params :set))
+	 (title (plist-get params :title))
+	 (output-file (plist-get params :output-file))
+	 (xcol (plist-get params :xcol))
+	 (col_labels (plist-get params :col-labels))
+	 (plot-str "'%s' using %s:%d with %s title '%s'")
+	 (script "") plot-lines)
+    (flet ((add-to-script (line) (setf script (format "%s\n%s" script line))))
+      (unless (equal type '2d) ('grid (add-to-script "set pm3d"))) ;; type
+      (when set ;; set
+	(mapcar
+	 (lambda (pair)
+	   (setf script (format "%s\nset %s %s" script (car pair) (cdr pair))))
+	 set))
+      (when title (setf script (format "%s\nset title %s" script title))) ;; title
+      ;; output_file
+      (when output-file
+
+	
+	
+	)
+
+      (dotimes (col (+ 1 num-cols))
+	(unless (or (and x-col (equal col x-col)) (equal col 0))
+	  (setf script (cons (format plot-str file (or (and x-col (format "%d" x-col)) "") col col) script))))
+      (concat "plot " (mapconcat 'identity (reverse script) "\\\n    ,"))
+      )))
+
+;;--------------------------------------------------------------------------------
+;; gnuplot integration into org tables
+(defun org-plot/gnuplot (&optional params)
+  "Plot table using gnuplot. Gnuplot options can be specified
+with PARAMS.  If not given options will be taken from the +PLOT
+line directly before or after the table."
+  (interactive)
+  (save-window-excursion
+    (delete-other-windows)
+    (org-plot/goto-nearest-table)
+    ;; set default options
+    (mapcar 
+     (lambda (pair)
+       (unless (plist-member params (car pair))
+	 (setf params (plist-put params (car pair) (cdr pair)))))
+     org-plot/gnuplot-default-options)
+    ;; get any plot options adjacent to the table
+    (save-excursion ;; before table
+      (while (and (equal 0 (forward-line -1))
+		  (looking-at "#\\+"))
+	(setf params (org-plot/collect-options params))))
+    (save-excursion ;; after table
+      (goto-char (org-table-end))
+      (while (and (equal 0 (forward-line 1))
+		  (looking-at "#\\+"))
+	(setf params (org-plot/collect-options params))))
+    ;; if headers set them as column labels in params
+    (setf params (plist-put params :col_labels (org-plot/header-labels)))
+    (let ((data-file (make-temp-file "org-plot")))
+      ;; get the data from the table (very different for 3d)
+      (case (intern (plist-get params :plot-type))
+	('2d   (org-plot/gnuplot-to-2d-data   data-file))
+	('3d   (org-plot/gnuplot-to-3d-data   data-file))
+	('grid (org-plot/gnuplot-to-grid-data data-file)))
       ;; write script
-      (insert (org-plot/gnuplot-script file x-col cols))
-      ;; graph table
-      (gnuplot-mode)
-      (gnuplot-send-buffer-to-gnuplot)
-      (bury-buffer (get-buffer "*gnuplot*")))
-    (delete-file file)))
+      (with-temp-buffer
+	;; write script
+	(if (plist-get :script) ;; user script
+	    (progn (insert-file-contents)
+		   (goto-char (point-min))
+		   (while (re-search-forward "$datafile" nil t)
+		     (replace-match data-file nil nil)))
+	  (insert (org-plot/gnuplot-script params)))
+	;; graph table
+	(gnuplot-mode)
+	(gnuplot-send-buffer-to-gnuplot))
+      ;; cleanup
+      (bury-buffer (get-buffer "*gnuplot*"))
+      (delete-file data-file))))
 
-; write a gunplot script
-(defun org-plot/gnuplot-script (file x-col num-cols)
-  (let ((plot-str "'%s' using %s:%d with lines title '%d'")
-	script)
-    (dotimes (col (+ 1 num-cols))
-      (unless (or (and x-col (equal col x-col)) (equal col 0))
-	(setf script (cons (format plot-str file (or (and x-col (format "%d" x-col)) "") col col) script))))
-    (concat "plot " (mapconcat 'identity (reverse script) "\\\n    ,"))))
-
-;;; org-table iteration
+;;; org-table integration
 (defun org-plot/table-rows ()
   "Return the number of rows in the current table"
   (- (line-number-at-pos (org-table-end)) (line-number-at-pos (org-table-begin))))
@@ -74,51 +223,10 @@ column, top-down (like reading japanese) ."
   (let ((begin-line (line-number-at-pos (org-table-begin)))
 	field-value)
     (save-excursion
-      ;; for each column
-      (dotimes (col (org-plot/table-cols))
-	;; for each row
-	(dotimes (row (org-plot/table-rows))
+      (dotimes (col (org-plot/table-cols)) ;; for each column
+	(dotimes (row (org-plot/table-rows)) ;; for each row
 	  (goto-line (+ begin-line row))
-	  ;; for each cell call function on the field value
 	  (eval (list function (+ 1 col) row (org-table-get-field (+ 1 col)))))))))
-
-;; broken
-(defun org-plot/table-map-cells-from (function &optional point)
-  "Call function on all cells in the current table.  Traverse by
-column, top-down (like reading japanese) ."
-  (let* ((point (point))
-	 (start-col (save-excursion (goto-char point) (org-table-current-column)))
-	 (begin-line (line-number-at-pos (org-table-begin)))
-	 (start-line (line-number-at-pos point))
-	 (delta-row (- begin-line start-line))
-	 field-value)
-    (save-excursion
-      ;; for each column
-      (dotimes (col (- (org-plot/table-cols) start-col))
-	;; for each row
-	(if (>= col start-col)
-	    (dotimes (row (- (org-plot/table-rows) delta-row))
-	      (goto-line (+ begin-line row))
-	      ;; for each cell call function on the field value
-	      (eval (list function (+ 1 (- col start-col)) row
-			  (org-table-get-field (+ 1 col))))))))))
-
-(defun org-plot/table-map-cols (function)
-  "Call function on every column in the current table.  Traverse by
-column, top-down (like reading japanese) ."
-  (let ((begin-line (line-number-at-pos (org-table-begin)))
-	col-value)
-    (save-excursion
-      ;; for each column
-      (dotimes (col (org-plot/table-cols))
-	;; for each row
-	(setf col-value nil)
-	(dotimes (row (org-plot/table-rows))
-	  (goto-line (+ begin-line row))
-	  (setf col-value (cons (org-table-get-field (+ 1 col)) col-value)))
-	;; call function on the list of row values
-	(message (mapconcat (lambda (el) (format "%s" el)) col-value " - "))
-	(eval (list function (+ 1 col) (quote (reverse col-value))))))))
 
 ;;; plot grids of data
 (defun org-plot/rest ()

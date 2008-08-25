@@ -57,7 +57,15 @@ in the upper-left most column of this table, and call `org-plot/rest'
 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
 
 
-
+#+PLOT:  :axes and allies
+| row number | example | data |
+|------------+---------+------|
+|          1 |      11 |      |
+|          2 |      12 |      |
+|          3 |      13 |      |
+|          4 |      14 |      |
+#+TBLFM: $2=$1+10
+#+PLOT:  :title "Eric Schulte" :xcol (1)
 
 
 
