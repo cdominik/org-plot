@@ -74,7 +74,7 @@
 		  ("labels" . :labels)
 		  ("map"    . :map)))
 	    (multiples '("set" "line"))
-	    (regexp ":\\([\"(][^\")]+?[\")]\\|[^ \t\n\r;,.]*\\)")
+	    (regexp ":\\([\"][^\"]+?[\"]\\|[(][^)]+?[)]\\|[^ \t\n\r;,.]*\\)")
 	    (start 0)
 	    o)
 	(while (setq o (pop op))
@@ -113,9 +113,9 @@ found."
 (defun org-plot/collect-options (&optional params)
   (interactive)
   (let ((line (thing-at-point 'line)))
-    (debug (if (string-match "#\\+PLOT: +\\(.*\\)$" line)
+    (if (string-match "#\\+PLOT: +\\(.*\\)$" line)
 	(org-plot/add-options-to-plist params (match-string 1 line))
-      params))))
+      params)))
 
 (defun org-plot/header-labels ()
   (interactive)
@@ -170,8 +170,7 @@ found."
 	(save-excursion (goto-char 3) ;; collect values of ind col
 			(dotimes (row rows)
 			  (setq row-vals (cons (org-table-get-field ind) row-vals))
-			  (forward-line 1))
-			(message "end row"))
+			  (forward-line 1)))
 	(setq row-vals (reverse row-vals))
 	(save-excursion (goto-char 2) ;; remove ind col
 			(dotimes (n (- ind 1)) (org-cycle))
@@ -210,13 +209,13 @@ found."
 	  (switch-to-buffer collector) ;; close up shop
 	  (write-file data-file) (kill-buffer collector))))
     ;; return the label lines to add to the script
-    (debug (if row-vals
+    (if row-vals
 	(format "set ytics (%s)"
 		(mapconcat
 		 (lambda (el)
 		   (setf counter (+ 1 counter))
-		   (format "\"%s\" %d," el counter))
-		 row-vals " "))))))
+		   (format "\"%s\" %d" el counter))
+		 row-vals ", ")))))
 
 (defun org-plot/gnuplot-script (data-file num-cols params &optional script-hack)
   (let* ((type (plist-get params :plot-type))
@@ -230,7 +229,7 @@ found."
 	 (file (plist-get params :file))
 	 (ind (plist-get params :ind))
 	 (deps (if (plist-member params :deps) (plist-get params :deps)))
-	 (col_labels (plist-get params :labels))
+	 (col-labels (plist-get params :labels))
 	 (plot-str "'%s' using %s:%d with %s title '%s'")
 	 (plot-cmd (case type
 		     ('2d "plot")
@@ -241,7 +240,7 @@ found."
       (if script-hack (add-to-script script-hack))
       (when file ;; output file
 	(add-to-script (format "set term %s" (file-name-extension file)))
-	(add-to-script (format "set output %s" file)))
+	(add-to-script (format "set output '%s'" file)))
       (case type ;; type
 	('2d ())
 	('3d ())
@@ -262,14 +261,14 @@ found."
 			(format plot-str data-file
 				(or (and ind (format "%d" ind)) "")
 				(+ 1 col) with
-				(or (nth col col_labels) (format "%d" (+ 1 col))))
+				(or (nth col col-labels) (format "%d" (+ 1 col))))
 			plot-lines)))))
 	('3d )
 	('grid
 	 (setq plot-lines (list (format "'%s' with %s title ''" data-file with)))))
       (add-to-script
        (concat plot-cmd " " (mapconcat 'identity (reverse plot-lines) "\\\n    ,")))
-      (debug script))))
+      script)))
 
 ;;--------------------------------------------------------------------------------
 ;; gnuplot integration into org tables
@@ -287,27 +286,26 @@ line directly before or after the table."
        (unless (plist-member params (car pair))
 	 (setf params (plist-put params (car pair) (cdr pair)))))
      org-plot/gnuplot-default-options)
+    ;; if headers set them as column labels in params
+    (setf params (plist-put params :labels (org-plot/header-labels)))
     ;; get any plot options adjacent to the table
     (save-excursion ;; before table
       (while (and (equal 0 (forward-line -1))
 		  (looking-at "#\\+"))
-	(setf params (debug (org-plot/collect-options params)))))
+	(setf params (org-plot/collect-options params))))
     (save-excursion ;; after table
       (goto-char (org-table-end))
       (while (and (equal 0 (forward-line 1))
 		  (looking-at "#\\+"))
 	(setf params (org-plot/collect-options params))))
-    (debug params)
-    ;; if headers set them as column labels in params
-    (setf params (plist-put params :labels (org-plot/header-labels)))
+    ;; get the data from the table (very different for 3d)
     (let ((data-file (make-temp-file "org-plot"))
 	  (num-cols (save-excursion
 		      (goto-char (org-table-end))
 		      (backward-char 3)
 		      (org-table-current-column)))
 	  script-hack) ;; because some datadumps return relevant
-		       ;; information for the script
-      ;; get the data from the table (very different for 3d)
+      ;; information for the script
       (setq script-hack
 	    (case (plist-get params :plot-type)
 	      ('2d   (org-plot/gnuplot-to-2d-data data-file))

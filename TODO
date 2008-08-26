@@ -3,6 +3,9 @@ IDEAS/TODO:
 
 * tasks
 
+(setq debug-on-error t)
+
+** TODO look at the binary option for 3d plots
 ** TODO 3d plotting
 
 ** TODO add plot links
@@ -13,7 +16,15 @@ something like
 not sure what the part following the : should contain, possibly
 options
 
+maybe rather than a plot it should look more like the latex in org
+format?? $ $
+
 ** TODO re-graph all graphs when publishing
+important sub-problem is how to cycle through all graphs, especially
+cycling through and re-graphing all graphs in a subtree, like the
+latex image command. (maybe even displaying the graph over the plot
+link.
+
 ** TODO sources of data to plot [1/4]
 plotting functions should work with any list of data, not just
 tables... would probably want to plot from...
@@ -62,9 +73,15 @@ The command can read these by macthing
  > you would want.
 
 this would just use the org-entry-get PLOT_TITLE etc...
-** TODO bugs [0/1]
+** TODO bugs [1/4]
 - [ ] after plotting 3d or grid data, sometime have to call the
       plotting command twice before the before a graph is generated
+- [X] parentheses inside of quotes for title break the regexp,
+      similarly "'s inside of ()'s will probably be a problem for
+      specifying labels
+- [ ] Got a "current buffer has no process" when tried from Windows
+      Native GNU Emacs 22.2.1
+- [ ] can wander too far and read options from nearby graphs
 
 
 * mailing list discussion
