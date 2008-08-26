@@ -4,6 +4,16 @@ IDEAS/TODO:
 * tasks
 
 ** TODO 3d plotting
+
+** TODO add plot links
+something like
+
+[[plot:table]]
+
+not sure what the part following the : should contain, possibly
+options
+
+** TODO re-graph all graphs when publishing
 ** TODO sources of data to plot [1/4]
 plotting functions should work with any list of data, not just
 tables... would probably want to plot from...
@@ -11,7 +21,6 @@ tables... would probably want to plot from...
 - [ ] elisp lists
 - [ ] results of property searches
 - [ ] comma/tab seperated strings
-
 ** TODO add reading of parameters from elsewhere in the org-file
 Currently reading from adjacent =#+PLOT= lines, but would also like to
 read from the current subtree, or even global to the file
