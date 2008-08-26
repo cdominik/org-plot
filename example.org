@@ -16,13 +16,15 @@ Use the next elisp link to bind the org-plot plotting command
 
 Now to look at some tables and their plots.  First to plot the
 following table use the key sequence defined above =C-M-g=.  This will
-find and plot the nearest table (I hope to build this behavior into a
-=plot:= link).  The options specified in any #+PLOT lines are read
-touching the table are read and applied to the plot.  For a complete
-list of all of the options and their meanings see the [[file:org-plot.el::org%20plot%20gnuplot%20options][options-comment]]
-in org-plot.el.
+find and plot the nearest table.  The options specified in any #+PLOT
+lines above the table are read and applied to the plot.  For a
+complete list of all of the options and their meanings see the [[options]]
+at the end of this file.  For more information on gnuplot options see
+[[http://gnuplot.sourceforge.net/documentation.html][the gnuplot documentation]], nearly all gnuplot options should be
+accessible through org-plot.
 
 #+PLOT: title:"example table" ind:1 type:2d
+#+PLOT: labels:("first new label" "second column" "last column")
 | independent var | first dependent var | second dependent var |
 |-----------------+---------------------+----------------------|
 |             0.1 |               0.425 |                0.375 |
@@ -83,7 +85,7 @@ graph.  The following example borrows a short description of org-mode
 from Bernt Hansen on the mailing list (a more practical usage would
 label every single row with something informative).
 
-#+PLOT:  type:grid map:t title:"org mode" ind:1
+#+PLOT:  type:grid map:t title:"Org-Mode" ind:1
 | text       | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
 |            | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
 | plain      | 0 | 0 | 1 | 1 | 0 | 0 | 1 | 0 | 0 | 0 | 0 | 0 | 1 | 1 | 1 | 0 | 0 |
@@ -98,5 +100,59 @@ label every single row with something informative).
 |            | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
 | Organize   | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
 
+
+Finally the last type of graphing currently supported is 3d graphs of
+data in a table.  This will probably require some more knowledge of
+gnuplot to make full use of the many options available.  For some
+simple demonstrations try the following graph using two different
+=with:= options =with:points= and =with:lines=.
+
+#+PLOT: type:3d with:points
+| 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| 0 | 2 | 2 | 2 | 2 | 2 | 0 |
+| 0 | 2 | 3 | 3 | 3 | 2 | 0 |
+| 0 | 2 | 3 | 4 | 3 | 2 | 0 |
+| 0 | 2 | 3 | 3 | 3 | 2 | 0 |
+| 0 | 2 | 2 | 2 | 2 | 2 | 0 |
+| 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+
+
 See the [[file:TODO][TODO]] file for pending additions, and please share your own
 comments ideas suggestions or bug reports.
+
+*Options*
+#<<options>>
+
+Gnuplot options accessible through `org-plot', common gnuplot options
+are specifically supported, while all other options are accessible
+through specification of generic set commands, script lines, or
+specification of custom script files.  Possible options are...
+
+set: ---------- specify any gnuplot option to be set when graphing
+title: -------- specify the title of the plot
+ind: ---------- specify which column of the table to use as the x
+                axis
+deps: --------- specify (as a comma seperated list with no spaces)
+                which columns of the table to graph against the
+                ind (defaults to all other columns)
+type: --------- specify whether the plot will be '2d' '3d or
+                'grid'
+with: --------- specify a with option to be inserted for every
+                col being plotted (e.g. lines, points, boxes,
+                impulses, etc...) defaults to 'lines'
+file: --------- if you want to plot to a file specify the path to
+                the desired output file
+labels: ------- list of labels to be used for the deps (defaults
+                to column headers if they exist)
+line ---------- specify an entire line to be inserted in the
+                gnuplot script
+map ----------- when plotting 3d or grid types, set this to true to
+                graph a flat mapping rather than a 3d slope
+script: ------- if you want total controll you can specify a
+                script file which will be used to plot, before
+                plotting every instance of $datafile in the
+                specified script will be replaced with the path
+                to the generated data file.  Note even if you set
+                this option you may still want to specify the
+                plot type, as that can impact the content of the
+                data file.

@@ -5,6 +5,14 @@ IDEAS/TODO:
 
 (setq debug-on-error t)
 
+** TODO org-table to lisp
+use
+
+Eric, did you know that Carsten provided a function called 
+org-table-to-lisp in org-6.06b?  I think with this you can 
+refactor your code to be more modular and thus better 
+maintainable and extensible.
+
 ** TODO look at the binary option for 3d plots
 ** TODO 3d plotting
 
@@ -82,6 +90,12 @@ this would just use the org-entry-get PLOT_TITLE etc...
 - [ ] Got a "current buffer has no process" when tried from Windows
       Native GNU Emacs 22.2.1
 - [ ] can wander too far and read options from nearby graphs
+- [ ] sometimes graphs just don't work, many times saving the org-file
+      and then re-graphing will fix this
+- [ ] changing the buffer
+
+*** changing the buffer
+this already happens whenever tab is pressed in a table.
 
 
 * mailing list discussion
