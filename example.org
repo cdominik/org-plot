@@ -1,74 +1,102 @@
-#+TITLE:     example.org
+#+TITLE:     Plotting with org-plot
 #+AUTHOR:    Eric Schulte
 #+DATE:      <2008-08-25 Mon>
 #+LANGUAGE:  en
-#+TEXT:      This is an example org-mode file to demonstrate simple plotting using org-plot
+#+TEXT:      This is an example org-mode file to demonstrate plotting using org-plot
 
-
-So first you need to load file:org-plot.el you can do this easily
-using the following elisp link (press "C-c C-o" on the link).
+So first we need to load file:org-plot.el, this can be done using the
+following link.
 
 [[elisp:(progn (add-to-list 'load-path "./") (load "org-plot.el"))]]
 
-#+PLOT: title:"example table"
-| row |       both |   positive |
-|-----+------------+------------|
-| 0.1 |      0.425 |      0.375 |
-| 0.2 |     0.3125 |     0.3375 |
-| 0.3 | 0.24999993 | 0.28333338 |
-| 0.4 |      0.275 |    0.28125 |
-| 0.5 |       0.26 |       0.27 |
-| 0.6 | 0.25833338 | 0.24999993 |
-| 0.7 | 0.24642845 | 0.23928553 |
-| 0.8 |    0.23125 |     0.2375 |
-| 0.9 | 0.23333323 |  0.2333332 |
-|   1 |     0.2225 |       0.22 |
-| 1.1 | 0.20909075 | 0.22272708 |
-| 1.2 | 0.19999998 | 0.21458333 |
-| 1.3 | 0.19615368 | 0.21730748 |
-| 1.4 | 0.18571433 | 0.21071435 |
-| 1.5 | 0.19000008 |  0.2150001 |
-| 1.6 |  0.1828125 |  0.2046875 |
-| 1.7 | 0.18088253 |  0.1985296 |
-| 1.8 | 0.17916675 | 0.18888898 |
-| 1.9 | 0.19342103 | 0.21315783 |
-|   2 |       0.19 |    0.21625 |
-| 2.1 | 0.18214268 | 0.20714265 |
-| 2.2 | 0.17727275 |  0.2022727 |
-| 2.3 |  0.1739131 |  0.1989131 |
-| 2.4 | 0.16770833 |  0.1916667 |
-| 2.5 |      0.164 |      0.188 |
-| 2.6 | 0.15769238 | 0.18076923 |
-| 2.7 |  0.1592591 |  0.1888887 |
-| 2.8 |  0.1598214 | 0.18928565 |
-| 2.9 | 0.15603453 |  0.1844828 |
+Use the next elisp link to bind the org-plot plotting command
+=org-plot/gnuplot= to =C-M-g= for easy calling.
 
-Now lets look at some plots of 3d data from a table, place the cursor
-in the upper-left most column of this table, and call `org-plot/rest'
-| 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
-| 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
-| 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
-| 0 | 0 | 0 | 1 | 1 | 0 | 0 | 1 | 0 | 0 | 0 | 0 | 0 | 1 | 1 | 1 | 0 | 0 | 0 |
-| 0 | 0 | 1 | 0 | 0 | 1 | 0 | 1 | 0 | 0 | 0 | 0 | 1 | 0 | 0 | 0 | 1 | 0 | 0 |
-| 0 | 0 | 1 | 0 | 0 | 1 | 0 | 1 | 0 | 0 | 0 | 0 | 1 | 0 | 0 | 0 | 1 | 0 | 0 |
-| 0 | 0 | 1 | 0 | 0 | 1 | 0 | 1 | 0 | 0 | 0 | 0 | 1 | 0 | 1 | 1 | 1 | 0 | 0 |
-| 0 | 0 | 1 | 0 | 0 | 1 | 0 | 1 | 0 | 0 | 0 | 0 | 1 | 0 | 0 | 0 | 0 | 0 | 0 |
-| 0 | 0 | 1 | 0 | 0 | 1 | 0 | 1 | 0 | 0 | 0 | 0 | 1 | 0 | 0 | 0 | 0 | 0 | 0 |
-| 0 | 0 | 1 | 0 | 0 | 1 | 0 | 1 | 0 | 0 | 0 | 0 | 1 | 0 | 0 | 0 | 1 | 0 | 0 |
-| 0 | 0 | 1 | 0 | 0 | 1 | 0 | 1 | 1 | 0 | 0 | 0 | 1 | 0 | 0 | 0 | 1 | 0 | 0 |
-| 0 | 0 | 0 | 1 | 1 | 0 | 0 | 1 | 0 | 1 | 1 | 0 | 0 | 1 | 1 | 1 | 0 | 0 | 0 |
-| 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
-| 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+[[elisp:(local-set-key "\M-\C-g" 'org-plot/gnuplot)]]
 
+Now to look at some tables and their plots.  First to plot the
+following table use the key sequence defined above =C-M-g=.  This will
+find and plot the nearest table (I hope to build this behavior into a
+=plot:= link).  The options specified in any #+PLOT lines are read
+touching the table are read and applied to the plot.  For a complete
+list of all of the options and their meanings see the [[file:org-plot.el::org%20plot%20gnuplot%20options][options-comment]]
+in org-plot.el.
 
-#+PLOT:  axis:and-allies
-#+PLOT:  set:"yrange [0:20]" xcol:0 set:"tics out" title:"Eric Schulte"
-#+PLOT: ycols:(2)
-| this is all | example | data |
-|-------------+---------+------|
-|           1 |      11 |    5 |
-|           2 |      12 |   10 |
-|           3 |      13 |   10 |
-|           4 |      14 |    5 |
-#+TBLFM: $2=$1+10
+#+PLOT: title:"example table" ind:1 type:2d
+| independent var | first dependent var | second dependent var |
+|-----------------+---------------------+----------------------|
+|             0.1 |               0.425 |                0.375 |
+|             0.2 |              0.3125 |               0.3375 |
+|             0.3 |          0.24999993 |           0.28333338 |
+|             0.4 |               0.275 |              0.28125 |
+|             0.5 |                0.26 |                 0.27 |
+|             0.6 |          0.25833338 |           0.24999993 |
+|             0.7 |          0.24642845 |           0.23928553 |
+|             0.8 |             0.23125 |               0.2375 |
+|             0.9 |          0.23333323 |            0.2333332 |
+|               1 |              0.2225 |                 0.22 |
+|             1.1 |          0.20909075 |           0.22272708 |
+|             1.2 |          0.19999998 |           0.21458333 |
+|             1.3 |          0.19615368 |           0.21730748 |
+|             1.4 |          0.18571433 |           0.21071435 |
+|             1.5 |          0.19000008 |            0.2150001 |
+|             1.6 |           0.1828125 |            0.2046875 |
+|             1.7 |          0.18088253 |            0.1985296 |
+|             1.8 |          0.17916675 |           0.18888898 |
+|             1.9 |          0.19342103 |           0.21315783 |
+|               2 |                0.19 |              0.21625 |
+|             2.1 |          0.18214268 |           0.20714265 |
+|             2.2 |          0.17727275 |            0.2022727 |
+|             2.3 |           0.1739131 |            0.1989131 |
+|             2.4 |          0.16770833 |            0.1916667 |
+|             2.5 |               0.164 |                0.188 |
+|             2.6 |          0.15769238 |           0.18076923 |
+|             2.7 |           0.1592591 |            0.1888887 |
+|             2.8 |           0.1598214 |           0.18928565 |
+|             2.9 |          0.15603453 |            0.1844828 |
 
+There are also some functions for plotting 3d or grid data.  To see an
+example of a grid plot call org-plot/gnuplot =C-M-g= which will plot
+the following table as a grid.
+
+To see the effect of =map= try setting it to t, and then re-plotting.
+
+#+PLOT:  type:grid map:nil title:"org mode"
+| 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| 0 | 0 | 1 | 1 | 0 | 0 | 1 | 0 | 0 | 0 | 0 | 0 | 1 | 1 | 1 | 0 | 0 |
+| 0 | 1 | 0 | 0 | 1 | 0 | 1 | 0 | 0 | 0 | 0 | 1 | 0 | 0 | 0 | 1 | 0 |
+| 0 | 1 | 0 | 0 | 1 | 0 | 1 | 0 | 0 | 0 | 0 | 1 | 0 | 0 | 0 | 1 | 0 |
+| 0 | 1 | 0 | 0 | 1 | 0 | 1 | 0 | 0 | 0 | 0 | 1 | 0 | 1 | 1 | 1 | 0 |
+| 0 | 1 | 0 | 0 | 1 | 0 | 1 | 0 | 0 | 0 | 0 | 1 | 0 | 0 | 0 | 0 | 0 |
+| 0 | 1 | 0 | 0 | 1 | 0 | 1 | 0 | 0 | 0 | 0 | 1 | 0 | 0 | 0 | 0 | 0 |
+| 0 | 1 | 0 | 0 | 1 | 0 | 1 | 0 | 0 | 0 | 0 | 1 | 0 | 0 | 0 | 1 | 0 |
+| 0 | 1 | 0 | 0 | 1 | 0 | 1 | 1 | 0 | 1 | 0 | 1 | 0 | 0 | 0 | 1 | 0 |
+| 0 | 0 | 1 | 1 | 0 | 0 | 1 | 0 | 1 | 1 | 0 | 0 | 1 | 1 | 1 | 0 | 0 |
+| 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+
+Plotting grids also respects the independent variable (=ind:=) option,
+and uses the values of the independent row to label the resulting
+graph.  The following example borrows a short description of org-mode
+from Bernt Hansen on the mailing list (a more practical usage would
+label every single row with something informative).
+
+#+PLOT:  type:grid map:t title:"org mode" ind:1
+| text       | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+|            | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| plain      | 0 | 0 | 1 | 1 | 0 | 0 | 1 | 0 | 0 | 0 | 0 | 0 | 1 | 1 | 1 | 0 | 0 |
+|            | 0 | 1 | 0 | 0 | 1 | 0 | 1 | 0 | 0 | 0 | 0 | 1 | 0 | 0 | 0 | 1 | 0 |
+| in         | 0 | 1 | 0 | 0 | 1 | 0 | 1 | 0 | 0 | 0 | 0 | 1 | 0 | 0 | 0 | 1 | 0 |
+|            | 0 | 1 | 0 | 0 | 1 | 0 | 1 | 0 | 0 | 0 | 0 | 1 | 0 | 1 | 1 | 1 | 0 |
+| everything | 0 | 1 | 0 | 0 | 1 | 0 | 1 | 0 | 0 | 0 | 0 | 1 | 0 | 0 | 0 | 0 | 0 |
+|            | 0 | 1 | 0 | 0 | 1 | 0 | 1 | 0 | 0 | 0 | 0 | 1 | 0 | 0 | 0 | 0 | 0 |
+| track      | 0 | 1 | 0 | 0 | 1 | 0 | 1 | 0 | 0 | 0 | 0 | 1 | 0 | 0 | 0 | 1 | 0 |
+|            | 0 | 1 | 0 | 0 | 1 | 0 | 1 | 1 | 0 | 1 | 0 | 1 | 0 | 0 | 0 | 1 | 0 |
+| and        | 0 | 0 | 1 | 1 | 0 | 0 | 1 | 0 | 1 | 1 | 0 | 0 | 1 | 1 | 1 | 0 | 0 |
+|            | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| Organize   | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+
+See the [[file:TODO][TODO]] file for pending additions, and please share your own
+comments ideas suggestions or bug reports.

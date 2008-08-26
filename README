@@ -17,8 +17,8 @@ Instillation:
    - Gnuplot
    - Gnuplot-Mode
 2. open the file example.org located in this directory, and follow
-   instruction to load org-plot.el, and begin viewing graphs of your
-   org data
+   instruction to load org-plot.el, and begin generating graphs of
+   your org data
 
 Collaboration:
 If you have any ideas suggestions questions or code you would like to
