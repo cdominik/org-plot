@@ -153,7 +153,7 @@ found."
 	 (ind (plist-get params :ind))
 	 (deps (if (plist-member params :deps) (plist-get params :deps)))
 	 (col-labels (plist-get params :labels))
-	 (plot-str "'%s' using %s:%d with %s title '%s'")
+	 (plot-str "'%s' using %s%d with %s title '%s'")
 	 (plot-cmd (case type
 		     ('2d "plot")
 		     ('3d "splot")
@@ -182,7 +182,7 @@ found."
 		 (setf plot-lines
 		       (cons
 			(format plot-str data-file
-				(or (and ind (format "%d" ind)) "")
+				(or (and ind (> ind 0) (format "%d:" ind)) "")
 				(+ 1 col) with
 				(or (nth col col-labels) (format "%d" (+ 1 col))))
 			plot-lines)))))

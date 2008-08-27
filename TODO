@@ -1,11 +1,12 @@
 # -*- mode: org -*-
 IDEAS/TODO:
 
-* tasks
-
-(setq debug-on-error t)
+* Tasks
 
 ** DONE org-table to lisp
+   :PROPERTIES:
+   :suggested-by: Stephan Schmitt
+   :END:
 use
 
 Eric, did you know that Carsten provided a function called 
@@ -15,6 +16,9 @@ maintainable and extensible.
 
 ** DONE 3d plotting
 ** TODO add plot links
+   :PROPERTIES:
+   :suggested-by: Carsten Dominik
+   :END:
 something like
 
 [[plot:table]]
@@ -25,6 +29,41 @@ options
 maybe rather than a plot it should look more like the latex in org
 format?? $ $
 
+** TODO support for plotting formulas
+gnuplot has capabilities for plotting formulas, this would make sense
+as the contents of a =[plot: ]= style link
+
+maybe something like
+
+=[splot:sin(sqrt(x**2+y**2))/sqrt(x**2+y**2)]=
+
+which could read options from a =#+PLOT= line in the same way as
+plotting tables...
+
+** TODO histogram support (with automatic bin size)
+   :PROPERTIES:
+   :suggested-by: Samuel Wales
+   :END:
+
+1.  For a selected column, it can be nice to draw a histogram.  Long
+ago, I developed the following formula for choosing a bin size.  Seems
+to work.
+
+        5*(max-min)/n
+
+You can use something like bin*round*($1 * (1.0/bin)) to bin.  Note
+that cl-extra.el's (round*) might be more consistent and
+mathematically vetted than (round) (though you might not be allowed to
+use cl-extra.el).
+
+** TODO automatic descriptive statistics with plot
+   :PROPERTIES:
+   :suggested-by: Samuel Wales
+   :END:
+
+2.  It might be nice to show descriptive statistics (I would show
+mean, median, geometric mean, standard deviation, min, max, range)
+somewhere while showing the plot, if you don't already do this.
 ** TODO re-graph all graphs when publishing
 important sub-problem is how to cycle through all graphs, especially
 cycling through and re-graphing all graphs in a subtree, like the
@@ -42,7 +81,7 @@ tables... would probably want to plot from...
 Currently reading from adjacent =#+PLOT= lines, but would also like to
 read from the current subtree, or even global to the file
 
-*** comment lines
+*** DONE comment lines
 I can see good ways to specify parameters for a plot that would be quite
 consistent with how Org deals with such things in similar situations.
 
@@ -64,22 +103,13 @@ The command can read these by macthing
 
 2. Use inherited properties to specify plotting parameters in a tree.
 
-
 *** header properties
- > (defun org-table-gnuplot (params)
- > 
- > and params can be a property list of arbitrary size with properties like
- > 
- > :title "string"
- > :xcol N
- > :ycols (n1 n2 n3)
- > :labelrow N
- > 
- > etc etc.  This you could use to expose any amount of gnuplot options  
- > you would want.
+would like to jump up to header sub-trees to find plotting options if
+none specified on near the table/link
 
-this would just use the org-entry-get PLOT_TITLE etc...
 ** TODO bugs [5/6]
+Thanks to the org-mode mailing list for reporting problems
+
 - [X] after plotting 3d or grid data, sometime have to call the
       plotting command twice before the before a graph is generated
 - [X] parentheses inside of quotes for title break the regexp,
@@ -96,87 +126,3 @@ this would just use the org-entry-get PLOT_TITLE etc...
 this already happens whenever tab is pressed in a table.
 
 
-* mailing list discussion
-** second
-mainly just cut/pasted from mailing list discussion
-
- > 
- > 1) Would it ever make sense to graph/plot information which is not in
- >    an org-table, if so how would that information be stored?
- >   - function or equation in the gnuplot link
- >   - array of values in the link
- >   - latex function (cringe)
- >   - elsewhere
- > 2) It seems that it may be useful to automatically generate/update
- >    plots during publication of org-files to latex or html
- > 3) Currently I find it very useful to be able to see an initial plot
- >    of a table with a single command, however there should be a sliding
- >    scale from ease of plotting to greater control over the final plot.
- >    Maybe through specification of gnuplot options through properties,
- >    or simply specification of a gnuplot script.
-First of all, I do believe it would be good to move the plotting
-settings to outside the table, either before or after.
-
-I can see good ways to specify parameters for a plot that would be quite
-consistent with how Org deals with such things in similar situations.
-
-1. A special comment line in the buffer, directly before the table, like
-
-#+PLOT: table-to-gnuplot :xcol 1 :ycols (2 4 5 6) :title "Some string"
-
-or
-
-#+PLOT: table-to-R :script "/path/to/script"
-
-The command can read these by matching
-
-(if (looking-at "#+PLOT: +\\([^ \t\r\n]+\\)\\( +.*\\)?")
-     (let* ((func (intern (match-string 1)))
-	   (params-plist
-	    (if (match-end 2)
-		(read (concat "(" (match-string 2 format) ")")))))
-
-2. Use inherited properties to specify plotting parameters in a tree.
-
- > 4) also clearly R is another plotting library of interest, how should
- >    different libraries be handled.
- > 5) would application of more powerful libraries like R to org-tables
- >    be useful as an alternative to calc, or is this beginning to look
- >    like a kitchen sink
-
-** first
-
- > > 1) titling the graph lines, by their column headers (when present)
- > > 2) exposing some of the gnuplot options (with lines, with bars, title,
- > >   lt, etc...), the only problem there is how to expose them without
- > >   cluttering the interface
- > > 3) probably there are some more which would be useful...
- > 
- > 
- > The best way to make this extensible is to use a property list as a  
- > parameter to the function that creates the plot.
- > 
- > 
- > like this:
- > 
- > (defun org-table-gnuplot (params)
- > 
- > and params can be a property list of arbitrary size with properties like
- > 
- > :title "string"
- > :xcol N
- > :ycols (n1 n2 n3)
- > :labelrow N
- > 
- > etc etc.  This you could use to expose any amount of gnuplot options  
- > you would want.
- > 
- > Other ideas:
- > 
- > - I think it might be better if the link can be just before or after a  
- > table, so we could make the function search forward to the next table  
- > and use that.
- > 
- > - instead of using elisp links, we could define a new link type  
- > gnuplot: to do this.  Not required, but might make things more compact  
- > and clean.

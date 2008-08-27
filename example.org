@@ -4,6 +4,8 @@
 #+LANGUAGE:  en
 #+TEXT:      This is an example org-mode file to demonstrate plotting using org-plot
 
+* Getting Started / examples
+
 So first we need to load file:org-plot.el, this can be done using the
 following link.
 
@@ -14,16 +16,29 @@ Use the next elisp link to bind the org-plot plotting command
 
 [[elisp:(local-set-key "\M-\C-g" 'org-plot/gnuplot)]]
 
-Now to look at some tables and their plots.  First to plot the
-following table use the key sequence defined above =C-M-g=.  This will
-find and plot the nearest table.  The options specified in any #+PLOT
-lines above the table are read and applied to the plot.  For a
-complete list of all of the options and their meanings see the [[options]]
-at the end of this file.  For more information on gnuplot options see
-[[http://gnuplot.sourceforge.net/documentation.html][the gnuplot documentation]], nearly all gnuplot options should be
-accessible through org-plot.
+** 2d plots (lines and histograms)
 
-#+PLOT: title:"example table" ind:1 type:2d
+Now to look at some tables and their plots.  First, to plot the
+following table use the key sequence defined above =C-M-g=.  This will
+find and plot the nearest table.  The options specified in any
+=#+PLOT= lines above the table are read and applied to the plot.
+Notice that the second =#+PLOT:= line specifies labels for each
+column, if this line is removed the labels will default to the column
+headers in the table, try removing this line and re-plotting.
+
+For an example of plotting histograms instead of lines
+1) remove the =ind:1= option
+2) replace the =with:lines= option with =with:histograms=
+3) optionally add the =deps:(2)= option to specify a single column to
+   plot (without this option both columns will be plotted as
+   side-by-side histograms)
+
+For a complete list of all of the options and their meanings see the
+[[options]] section at the end of this file.  For more information on
+gnuplot options see [[http://gnuplot.sourceforge.net/documentation.html][the gnuplot documentation]], nearly all gnuplot
+options should be accessible through org-plot.
+
+#+PLOT: title:"example table" ind:1 type:2d with:lines
 #+PLOT: labels:("first new label" "second column" "last column")
 | independent var | first dependent var | second dependent var |
 |-----------------+---------------------+----------------------|
@@ -57,11 +72,14 @@ accessible through org-plot.
 |             2.8 |           0.1598214 |           0.18928565 |
 |             2.9 |          0.15603453 |            0.1844828 |
 
+** 3d grid plots
+
 There are also some functions for plotting 3d or grid data.  To see an
 example of a grid plot call org-plot/gnuplot =C-M-g= which will plot
 the following table as a grid.
 
-To see the effect of =map= try setting it to t, and then re-plotting.
+To see the effect of =map= try setting it to =t=, and then
+re-plotting.
 
 #+PLOT:  type:grid map:nil title:"org mode"
 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
@@ -100,12 +118,13 @@ label every single row with something informative).
 |            | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
 | Organize   | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
 
+** 3d plots
 
 Finally the last type of graphing currently supported is 3d graphs of
 data in a table.  This will probably require some more knowledge of
 gnuplot to make full use of the many options available.  For some
-simple demonstrations try the following graph using two different
-=with:= options =with:points= and =with:lines=.
+simple demonstrations try the following graph using some different
+=with:= options =with:points=, =with:lines=, and =with:pm3d=.
 
 #+PLOT: type:3d with:points
 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
@@ -116,17 +135,30 @@ simple demonstrations try the following graph using two different
 | 0 | 2 | 2 | 2 | 2 | 2 | 0 |
 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
 
+** graphing formulas
+not yet implemented
 
+* Reference
+
+org-plot require Emacs, Org-Mode, Gnuplot, and Gnuplot-Mode
+
+ Emacs        | http://www.gnu.org/software/emacs/ 
+ Orgmode      | http://orgmode.org/
+ Gnuplot      | http://www.gnuplot.info/
+ Gnuplot-Mode | http://cars9.uchicago.edu/~ravel/software/gnuplot-mode.html
+
+** Future work
 See the [[file:TODO][TODO]] file for pending additions, and please share your own
 comments ideas suggestions or bug reports.
 
-*Options*
+** Plotting Options
 #<<options>>
 
-Gnuplot options accessible through `org-plot', common gnuplot options
-are specifically supported, while all other options are accessible
-through specification of generic set commands, script lines, or
-specification of custom script files.  Possible options are...
+Gnuplot options (see [[http://gnuplot.sourceforge.net/documentation.html][the gnuplot documentation]]) accessible through
+`org-plot', common gnuplot options are specifically supported, while
+all other options are accessible through specification of generic set
+commands, script lines, or specification of custom script files.
+Possible options are...
 
 set: ---------- specify any gnuplot option to be set when graphing
 title: -------- specify the title of the plot
