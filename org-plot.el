@@ -64,13 +64,8 @@
   "Move the point to the beginning of nearest table.  First look
 back until hitting an empty line, then forward until a table is
 found."
-  (interactive)
-  (move-beginning-of-line 1)
-  (while (not (or (org-at-table-p) ;; backwards
-		  (> 0 (forward-line -1))
-		  (equal (length (thing-at-point 'line)) 1))))
-  (while (not (or (org-at-table-p) ;; forwards
-		  (< 0 (forward-line 1)))))
+  (interactive) (move-beginning-of-line 1)
+  (while (not (or (org-at-table-p) (< 0 (forward-line 1)))))
   (goto-char (org-table-begin)))
 
 (defun org-plot/collect-options (&optional params)
@@ -80,12 +75,18 @@ found."
 	(org-plot/add-options-to-plist params (match-string 1 line))
       params)))
 
-(defun org-plot/gnuplot-to-2d-data (table data-file)
-  (with-temp-file data-file (insert (orgtbl-to-generic table '(:sep "\t"))))
-  nil)
+(defun org-plot-quote-tsv-field (s)
+  "Quote field for export to gnuplot."
+  (if (string-match org-table-number-regexp s) s
+    (concat "\"" (mapconcat 'identity (split-string s "\"") "\"\"") "\"")))
 
-(defun org-plot/gnuplot-to-3d-data (table data-file)
-  (with-temp-file data-file (insert (orgtbl-to-generic table '(:sep "\t"))))
+(defun org-plot/gnuplot-to-data (table data-file)
+  (with-temp-file
+      data-file (insert (orgtbl-to-generic
+			 table
+			 (org-combine-plists
+			  '(:sep "\t" :fmt org-plot-quote-tsv-field)
+			  params))))
   nil)
 
 (defun org-plot/gnuplot-to-grid-data (table data-file)
@@ -97,9 +98,10 @@ found."
 		   (dotimes (col (length (first table)))
 		     (setf collector (cons col collector)))
 		   collector)))
-	 (counter 0) row-vals)
+	 row-vals (counter 0))
     (when (>= ind 0) ;; collect values of ind col
-      (setf row-vals (mapcar (lambda (row) (nth ind row)) table)))
+      (setf row-vals (mapcar (lambda (row) (setf counter (+ 1 counter))
+			       (cons counter (nth ind row))) table)))
     (when (or deps (>= ind 0)) ;; remove non-plotting columns
       (setf deps (delq ind deps))
       (setf table (mapcar (lambda (row)
@@ -131,16 +133,9 @@ found."
 	    (insert back-edge) (insert "\n") ;; back edge
 	    (insert front-edge) (insert "\n") ;; front edge
 	    (setf back-edge "") (setf front-edge "")))))
-    ;; return the label lines to add to the script
-    (if row-vals
-	(format "set ytics (%s)"
-		(mapconcat
-		 (lambda (el)
-		   (setf counter (+ 1 counter))
-		   (format "\"%s\" %d" el counter))
-		 row-vals ", ")))))
+    row-vals))
 
-(defun org-plot/gnuplot-script (data-file num-cols params &optional script-hack)
+(defun org-plot/gnuplot-script (data-file num-cols params)
   (let* ((type (plist-get params :plot-type))
 	 (with (if (equal type 'grid)
 		   'pm3d
@@ -151,16 +146,18 @@ found."
 	 (title (plist-get params :title))
 	 (file (plist-get params :file))
 	 (ind (plist-get params :ind))
+	 (text-ind (plist-get params :textind))
 	 (deps (if (plist-member params :deps) (plist-get params :deps)))
 	 (col-labels (plist-get params :labels))
-	 (plot-str "'%s' using %s%d with %s title '%s'")
+	 (x-labels (plist-get params :xlabels))
+	 (y-labels (plist-get params :ylabels))
+	 (plot-str "'%s' using %s%d%s with %s title '%s'")
 	 (plot-cmd (case type
 		     ('2d "plot")
 		     ('3d "splot")
 		     ('grid "splot")))
 	 (script "reset") plot-lines)
     (flet ((add-to-script (line) (setf script (format "%s\n%s" script line))))
-      (if script-hack (add-to-script script-hack))
       (when file ;; output file
 	(add-to-script (format "set term %s" (file-name-extension file)))
 	(add-to-script (format "set output '%s'" file)))
@@ -174,6 +171,18 @@ found."
       (when lines (mapcar (lambda (el) (add-to-script el)) lines)) ;; line
       (when sets ;; set
 	(mapcar (lambda (el) (add-to-script (format "set %s" el))) sets))
+      (when x-labels ;; x labels (xtics)
+	(add-to-script
+	 (format "set xtics (%s)"
+		 (mapconcat (lambda (pair)
+			      (format "\"%s\" %d" (cdr pair) (car pair)))
+			    x-labels ", "))))
+      (when y-labels ;; y labels (ytics)
+	(add-to-script
+	 (format "set ytics (%s)"
+		 (mapconcat (lambda (pair)
+			      (format "\"%s\" %d" (cdr pair) (car pair)))
+			    y-labels ", "))))
       (case type ;; plot command
 	('2d (dotimes (col num-cols) 
 	       (unless (and (equal type '2d)
@@ -182,8 +191,11 @@ found."
 		 (setf plot-lines
 		       (cons
 			(format plot-str data-file
-				(or (and ind (> ind 0) (format "%d:" ind)) "")
-				(+ 1 col) with
+				(or (and (not text-ind) ind
+					 (> ind 0) (format "%d:" ind)) "")
+				(+ 1 col)
+				(if text-ind (format ":xticlabel(%d)" ind) "")
+				with
 				(or (nth col col-labels) (format "%d" (+ 1 col))))
 			plot-lines)))))
 	('3d
@@ -219,8 +231,7 @@ line directly before or after the table."
     ;; collect table and table information
     (let* ((data-file (make-temp-file "org-plot"))
 	   (table (org-table-to-lisp))
-	   (num-cols (length (first table)))
-	   script-hack) ;; because some datadumps return relevant
+	   (num-cols (length (first table))))
       (while (equal 'hline (first table)) (setf table (cdr table)))
       (when (equal (second table) 'hline)
 	(setf params (plist-put params :labels (first table))) ;; headers to labels
@@ -229,12 +240,22 @@ line directly before or after the table."
       (save-excursion (while (and (equal 0 (forward-line -1))
 				  (looking-at "#\\+"))
 			(setf params (org-plot/collect-options params))))
-      ;; dump table to datafile (very different for 3d)
-      (setq script-hack ;; information for the script
-	    (case (plist-get params :plot-type)
-	      ('2d   (org-plot/gnuplot-to-2d-data table data-file))
-	      ('3d   (org-plot/gnuplot-to-3d-data table data-file))
-	      ('grid (org-plot/gnuplot-to-grid-data table data-file))))
+      ;; dump table to datafile (very different for grid)
+      (case (plist-get params :plot-type)
+	('2d   (org-plot/gnuplot-to-data table data-file))
+	('3d   (org-plot/gnuplot-to-data table data-file))
+	('grid (let ((y-labels (org-plot/gnuplot-to-grid-data table data-file)))
+		 (when y-labels (plist-put params :ylabels y-labels)))))
+      ;; check for text ind column
+      (let ((ind (- (plist-get params :ind) 1)))
+	(when (and (>= ind 0) (equal '2d (plist-get params :plot-type)))
+	  (if (> (length
+		  (delq 0 (mapcar
+			   (lambda (el)
+			     (if (string-match org-table-number-regexp el)
+				 0 1))
+			   (mapcar (lambda (row) (nth ind row)) table)))) 0)
+	      (plist-put params :textind t))))
       ;; write script
       (with-temp-buffer
 	(if (plist-get params :script) ;; user script
@@ -243,12 +264,12 @@ line directly before or after the table."
 		   (while (re-search-forward "$datafile" nil t)
 		     (replace-match data-file nil nil)))
 	  (insert
-	   (org-plot/gnuplot-script data-file num-cols params script-hack)))
+	   (org-plot/gnuplot-script data-file num-cols params)))
 	;; graph table
 	(gnuplot-mode)
 	(gnuplot-send-buffer-to-gnuplot))
       ;; cleanup
-      (bury-buffer (get-buffer "*gnuplot*")) (delete-file data-file))))
+      (bury-buffer (get-buffer "*gnuplot*"))(delete-file data-file))))
 
 (provide 'org-plot)
 ;;; org-plot.el ends here

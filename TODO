@@ -107,7 +107,16 @@ The command can read these by macthing
 would like to jump up to header sub-trees to find plotting options if
 none specified on near the table/link
 
-** TODO bugs [5/6]
+** DONE when ind column is text, use as labels
+can be done by adding parameters (xlabels, and ylabels)
+
+using xticlabels(ind)
+
+** TODO remove dependency on gnuplot-mode.el
+This shouldn't be hard to do, just sent to compilation buffer if
+gnuplot-mode is not available
+ 
+** TODO bugs [7/8]
 Thanks to the org-mode mailing list for reporting problems
 
 - [X] after plotting 3d or grid data, sometime have to call the
@@ -121,8 +130,41 @@ Thanks to the org-mode mailing list for reporting problems
 - [X] sometimes graphs just don't work, many times saving the org-file
       and then re-graphing will fix this
 - [X] changing the buffer
+- [X] finding the table to plot
+- [X] columns with multi-word text
 
 *** changing the buffer
 this already happens whenever tab is pressed in a table.
 
+*** DONE [2008-08-28 Thu] Finding the table to plot
+      :PROPERTIES:
+      :suggested-by: William Henney
+      :END:
+      =org-plot/goto-nearest-table= searches backward first, which means
+      that if point is located in an options line for a following table,
+      then it will find the previous table instead. This is usually
+      undesired.
+
+*** DONE [2008-08-28 Thu] Columns with multi-word text
+    :PROPERTIES:
+    :suggested-by: William Henney
+    :END:
+    Consider the following table:
+
+    now quoting non-numeric columns (see [[file:org-plot.el::defun%20org%20plot%20quote%20tsv%20field%20s][quote-tsv]])
+
+#+PLOT: title:"Citas" ind:1 deps:(3) type:2d with:histograms set:"yrange [0:]"
+    | Sede      | Max cites | H-index |
+    |-----------+-----------+---------|
+    | Chile     |    257.72 |   21.39 |
+    | Leeds     |    165.77 |   19.68 |
+    | São Paolo |     71.00 |   11.50 |
+    | Stockholm |    134.19 |   14.33 |
+    | Morelia   |    257.56 |   17.67 |
+
+    In theory, this should plot the third column. However, the data
+    point for São Paolo comes from the second column
+    instead. Presumably this is because of the embedded space in "Sõo
+    Paolo". If I replace it with a unicode non-breaking space,
+    "São Paolo", then it works correctly.
 
