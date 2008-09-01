@@ -70,6 +70,9 @@ cycling through and re-graphing all graphs in a subtree, like the
 latex image command. (maybe even displaying the graph over the plot
 link.
 
+[Carsten] To call a function at each table, you can use
+org-table-map-tables, defined in org.el.
+
 ** TODO sources of data to plot [1/4]
 plotting functions should work with any list of data, not just
 tables... would probably want to plot from...

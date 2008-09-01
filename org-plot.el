@@ -16,7 +16,7 @@
 (require 'gnuplot)
 (require 'cl)
 
-(defun debug (el) (message (format "%S" el)) el)
+;; (defun debug (el) (message (format "%S" el)) el)
 
 (defvar org-plot/gnuplot-default-options
   '((:plot-type . 2d)
