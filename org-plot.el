@@ -8,15 +8,15 @@
 
 ;; borrows ideas and a couple of lines of code from org-exp.el
 
-;; thanks to the org-mode mailing list for suggestions
+;; thanks to the org-mode mailing list for testing and implementation
+;; and feature suggestions
 
 ;;; Code:
 (require 'org)
 (require 'org-exp)
+(require 'org-table)
 (require 'gnuplot)
 (require 'cl)
-
-;; (defun debug (el) (message (format "%S" el)) el)
 
 (defvar org-plot/gnuplot-default-options
   '((:plot-type . 2d)
