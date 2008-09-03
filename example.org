@@ -26,13 +26,6 @@ Notice that the second =#+PLOT:= line specifies labels for each
 column, if this line is removed the labels will default to the column
 headers in the table, try removing this line and re-plotting.
 
-For an example of plotting histograms instead of lines
-1) remove the =ind:1= option
-2) replace the =with:lines= option with =with:histograms=
-3) optionally add the =deps:(2)= option to specify a single column to
-   plot (without this option both columns will be plotted as
-   side-by-side histograms)
-
 For a complete list of all of the options and their meanings see the
 [[options]] section at the end of this file.  For more information on
 gnuplot options see [[http://gnuplot.sourceforge.net/documentation.html][the gnuplot documentation]], nearly all gnuplot
@@ -71,6 +64,27 @@ options should be accessible through org-plot.
 |             2.7 |           0.1592591 |            0.1888887 |
 |             2.8 |           0.1598214 |           0.18928565 |
 |             2.9 |          0.15603453 |            0.1844828 |
+
+
+For an example of plotting histograms from 2d data, plot the following
+table.  Notice that the column specified as =ind= contains textual
+non-numeric data, when this is the case org-plot will use the data as
+labels for the x-axis using the gnuplot =xticlabels()= function.
+
+#+PLOT: title:"Citas" ind:1 deps:(3) type:2d with:histograms set:"yrange [0:]"
+| Sede      | Max cites | H-index |
+|-----------+-----------+---------|
+| Chile     |    257.72 |   21.39 |
+| Leeds     |    165.77 |   19.68 |
+| São Paolo |     71.00 |   11.50 |
+| Stockholm |    134.19 |   14.33 |
+| Morelia   |    257.56 |   17.67 |
+
+
+For another example of plotting histograms instead of lines, change
+the following options on the first table on this page, and replot
+1) remove the =ind:1= option
+2) replace the =with:lines= option with =with:histograms=
 
 ** 3d grid plots
 
@@ -140,7 +154,7 @@ not yet implemented
 
 * Reference
 
-org-plot require Emacs, Org-Mode, Gnuplot, and Gnuplot-Mode
+org-plot requires Emacs, Org-Mode, Gnuplot, and Gnuplot-Mode
 
  Emacs        | http://www.gnu.org/software/emacs/ 
  Orgmode      | http://orgmode.org/
