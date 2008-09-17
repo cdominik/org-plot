@@ -192,8 +192,9 @@ Possible options are...
 - map :: when plotting 3d or grid types, set this to true to graph a
          flat mapping rather than a 3d slope
 - script :: if you want total controll you can specify a script file
-            which will be used to plot, before plotting every instance
-            of $datafile in the specified script will be replaced with
-            the path to the generated data file.  Note even if you set
-            this option you may still want to specify the plot type,
-            as that can impact the content of the data file.
+            (place the file name inside "s) which will be used to
+            plot, before plotting every instance of $datafile in the
+            specified script will be replaced with the path to the
+            generated data file.  Note even if you set this option you
+            may still want to specify the plot type, as that can
+            impact the content of the data file.

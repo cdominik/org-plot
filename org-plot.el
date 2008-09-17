@@ -284,7 +284,7 @@ line directly before or after the table."
       ;; write script
       (with-temp-buffer
 	(if (plist-get params :script) ;; user script
-	    (progn (insert-file-contents)
+	    (progn (insert-file-contents (plist-get params :script))
 		   (goto-char (point-min))
 		   (while (re-search-forward "$datafile" nil t)
 		     (replace-match data-file nil nil)))
