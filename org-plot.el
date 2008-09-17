@@ -1,22 +1,44 @@
-;;; org-plot.el --- support for plotting from org-mode
+;;; org-plot.el --- Support for plotting from Org-mode
 
+;; Copyright (C) 2008 Free Software Foundation, Inc.
+;;
 ;; Author: Eric Schulte <schulte dot eric at gmail dot com>
+;; Keywords: tables, plotting
+;; Homepage: http://orgmode.org
+;; Version: 6.06b
+;;
+;; This file is part of GNU Emacs.
+;;
+;; GNU Emacs is free software: you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published by
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
-;; This file is Not part of GNU Emacs. yet...
+;; GNU Emacs is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
 
-;;; Comments:
+;; You should have received a copy of the GNU General Public License
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
-;; borrows ideas and a couple of lines of code from org-exp.el
+;;; Commentary:
 
-;; thanks to the org-mode mailing list for testing and implementation
+;; Borrows ideas and a couple of lines of code from org-exp.el.
+
+;; Thanks to the org-mode mailing list for testing and implementation
 ;; and feature suggestions
 
 ;;; Code:
 (require 'org)
 (require 'org-exp)
 (require 'org-table)
-(require 'gnuplot)
-(require 'cl)
+(eval-and-compile
+  (require 'cl))
+
+(declare-function gnuplot-delchar-or-maybe-eof "ext:gnuplot" (arg))
+(declare-function gnuplot-mode "ext:gnuplot" ())
+(declare-function gnuplot-send-buffer-to-gnuplot "ext:gnuplot" ())
 
 (defvar org-plot/gnuplot-default-options
   '((:plot-type . 2d)
@@ -80,7 +102,7 @@ found."
   (if (string-match org-table-number-regexp s) s
     (concat "\"" (mapconcat 'identity (split-string s "\"") "\"\"") "\"")))
 
-(defun org-plot/gnuplot-to-data (table data-file)
+(defun org-plot/gnuplot-to-data (table data-file params)
   (with-temp-file
       data-file (insert (orgtbl-to-generic
 			 table
@@ -89,7 +111,7 @@ found."
 			  params))))
   nil)
 
-(defun org-plot/gnuplot-to-grid-data (table data-file)
+(defun org-plot/gnuplot-to-grid-data (table data-file params)
   (interactive)
   (let* ((ind (- (plist-get params :ind) 1))
 	 (deps (if (plist-member params :deps)
@@ -168,9 +190,9 @@ found."
 		   (add-to-script "set pm3d map")
 		 (add-to-script "set pm3d"))))
       (when title (add-to-script (format "set title '%s'" title))) ;; title
-      (when lines (mapcar (lambda (el) (add-to-script el)) lines)) ;; line
+      (when lines (mapc (lambda (el) (add-to-script el)) lines)) ;; line
       (when sets ;; set
-	(mapcar (lambda (el) (add-to-script (format "set %s" el))) sets))
+	(mapc (lambda (el) (add-to-script (format "set %s" el))) sets))
       (when x-labels ;; x labels (xtics)
 	(add-to-script
 	 (format "set xtics (%s)"
@@ -208,13 +230,15 @@ found."
        (concat plot-cmd " " (mapconcat 'identity (reverse plot-lines) "\\\n    ,")))
       script)))
 
-;;--------------------------------------------------------------------------------
+;;-----------------------------------------------------------------------------
 ;; facad functions
+;;;###autoload
 (defun org-plot/gnuplot (&optional params)
   "Plot table using gnuplot. Gnuplot options can be specified
 with PARAMS.  If not given options will be taken from the +PLOT
 line directly before or after the table."
   (interactive)
+  (require 'gnuplot)
   (save-window-excursion
     (delete-other-windows)
     (when (get-buffer "*gnuplot*") ;; reset *gnuplot* if it already running
@@ -223,7 +247,7 @@ line directly before or after the table."
 	(gnuplot-delchar-or-maybe-eof nil)))
     (org-plot/goto-nearest-table)
     ;; set default options
-    (mapcar 
+    (mapc 
      (lambda (pair)
        (unless (plist-member params (car pair))
 	 (setf params (plist-put params (car pair) (cdr pair)))))
@@ -242,9 +266,10 @@ line directly before or after the table."
 			(setf params (org-plot/collect-options params))))
       ;; dump table to datafile (very different for grid)
       (case (plist-get params :plot-type)
-	('2d   (org-plot/gnuplot-to-data table data-file))
-	('3d   (org-plot/gnuplot-to-data table data-file))
-	('grid (let ((y-labels (org-plot/gnuplot-to-grid-data table data-file)))
+	('2d   (org-plot/gnuplot-to-data table data-file params))
+	('3d   (org-plot/gnuplot-to-data table data-file params))
+	('grid (let ((y-labels (org-plot/gnuplot-to-grid-data
+				table data-file params)))
 		 (when y-labels (plist-put params :ylabels y-labels)))))
       ;; check for text ind column
       (let ((ind (- (plist-get params :ind) 1)))
@@ -272,4 +297,5 @@ line directly before or after the table."
       (bury-buffer (get-buffer "*gnuplot*"))(delete-file data-file))))
 
 (provide 'org-plot)
+
 ;;; org-plot.el ends here
