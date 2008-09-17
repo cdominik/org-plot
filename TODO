@@ -1,4 +1,6 @@
 # -*- mode: org -*-
+#+SEQ_TODO:  TODO | DONE MAYBE
+#+CATEGORY: org-plot
 IDEAS/TODO:
 
 * Tasks
@@ -15,7 +17,28 @@ refactor your code to be more modular and thus better
 maintainable and extensible.
 
 ** DONE 3d plotting
-** TODO add plot links
+
+** DONE when ind column is text, use as labels
+can be done by adding parameters (xlabels, and ylabels)
+
+using xticlabels(ind)
+
+** MAYBE automatic bin size for histograms
+   :PROPERTIES:
+   :suggested-by: Samuel Wales
+   :END:
+
+1.  For a selected column, it can be nice to draw a histogram.  Long
+ago, I developed the following formula for choosing a bin size.  Seems
+to work.
+
+        5*(max-min)/n
+
+You can use something like bin*round*($1 * (1.0/bin)) to bin.  Note
+that cl-extra.el's (round*) might be more consistent and
+mathematically vetted than (round) (though you might not be allowed to
+use cl-extra.el).
+** MAYBE add plot links
    :PROPERTIES:
    :suggested-by: Carsten Dominik
    :END:
@@ -40,22 +63,6 @@ maybe something like
 which could read options from a =#+PLOT= line in the same way as
 plotting tables...
 
-** TODO histogram support (with automatic bin size)
-   :PROPERTIES:
-   :suggested-by: Samuel Wales
-   :END:
-
-1.  For a selected column, it can be nice to draw a histogram.  Long
-ago, I developed the following formula for choosing a bin size.  Seems
-to work.
-
-        5*(max-min)/n
-
-You can use something like bin*round*($1 * (1.0/bin)) to bin.  Note
-that cl-extra.el's (round*) might be more consistent and
-mathematically vetted than (round) (though you might not be allowed to
-use cl-extra.el).
-
 ** TODO automatic descriptive statistics with plot
    :PROPERTIES:
    :suggested-by: Samuel Wales
@@ -78,7 +85,7 @@ plotting functions should work with any list of data, not just
 tables... would probably want to plot from...
 - [X] tables
 - [ ] elisp lists
-- [ ] results of property searches
+- [ ] results of property searches (can be saved in tables)
 - [ ] comma/tab seperated strings
 ** TODO add reading of parameters from elsewhere in the org-file
 Currently reading from adjacent =#+PLOT= lines, but would also like to
@@ -110,14 +117,27 @@ The command can read these by macthing
 would like to jump up to header sub-trees to find plotting options if
 none specified on near the table/link
 
-** DONE when ind column is text, use as labels
-can be done by adding parameters (xlabels, and ylabels)
-
-using xticlabels(ind)
-
 ** TODO remove dependency on gnuplot-mode.el
 This shouldn't be hard to do, just sent to compilation buffer if
-gnuplot-mode is not available
+gnuplot-mode is not available.  This is proving difficult
+
+(defun org-plot-gnuplot-comint ()
+  "Drop the gnuplot-script buffer to gnuplot holding the
+connection open so that plot windows will remain open."
+  (let ((gnuplot-delay .1))
+    (apply 'make-comint "gnuplot" '("gnuplot"))
+    (save-excursion
+      (set-buffer "*gnuplot*")
+      (set-marker (process-mark (get-process "gnuplot")) (point-marker))
+      (sleep-for (* 20 gnuplot-delay))
+      (let ((script (buffer-substring (point-min) (point-max))))
+	(org-plot-gnuplot-send-input)
+	(mapcar (lambda (line)
+		  (insert line)
+		  (comint-send-input)
+		  (sleep-for gnuplot-delay)
+		  (goto-char (point-max)))
+		(split-string script "\n" t))))))
  
 ** TODO bugs [7/8]
 Thanks to the org-mode mailing list for reporting problems

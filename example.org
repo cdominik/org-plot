@@ -174,31 +174,26 @@ all other options are accessible through specification of generic set
 commands, script lines, or specification of custom script files.
 Possible options are...
 
-set: ---------- specify any gnuplot option to be set when graphing
-title: -------- specify the title of the plot
-ind: ---------- specify which column of the table to use as the x
-                axis
-deps: --------- specify (as a comma seperated list with no spaces)
-                which columns of the table to graph against the
-                ind (defaults to all other columns)
-type: --------- specify whether the plot will be '2d' '3d or
-                'grid'
-with: --------- specify a with option to be inserted for every
-                col being plotted (e.g. lines, points, boxes,
-                impulses, etc...) defaults to 'lines'
-file: --------- if you want to plot to a file specify the path to
-                the desired output file
-labels: ------- list of labels to be used for the deps (defaults
-                to column headers if they exist)
-line ---------- specify an entire line to be inserted in the
-                gnuplot script
-map ----------- when plotting 3d or grid types, set this to true to
-                graph a flat mapping rather than a 3d slope
-script: ------- if you want total controll you can specify a
-                script file which will be used to plot, before
-                plotting every instance of $datafile in the
-                specified script will be replaced with the path
-                to the generated data file.  Note even if you set
-                this option you may still want to specify the
-                plot type, as that can impact the content of the
-                data file.
+- set :: specify any gnuplot option to be set when graphing
+- title :: specify the title of the plot
+- ind :: specify which column of the table to use as the x axis
+- deps :: specify (as a comma seperated list with no spaces) which
+          columns of the table to graph against the ind (defaults to
+          all other columns)
+- type :: specify whether the plot will be '2d' '3d or 'grid'
+- with :: specify a with option to be inserted for every col being
+          plotted (e.g. lines, points, boxes, impulses, etc...)
+          defaults to 'lines'
+- file :: if you want to plot to a file specify the path to the
+          desired output file
+- labels :: list of labels to be used for the deps (defaults to column
+            headers if they exist)
+- line :: specify an entire line to be inserted in the gnuplot script
+- map :: when plotting 3d or grid types, set this to true to graph a
+         flat mapping rather than a 3d slope
+- script :: if you want total controll you can specify a script file
+            which will be used to plot, before plotting every instance
+            of $datafile in the specified script will be replaced with
+            the path to the generated data file.  Note even if you set
+            this option you may still want to specify the plot type,
+            as that can impact the content of the data file.
