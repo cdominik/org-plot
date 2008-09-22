@@ -51,27 +51,7 @@ options
 
 maybe rather than a plot it should look more like the latex in org
 format?? $ $
-
-** TODO support for plotting formulas
-gnuplot has capabilities for plotting formulas, this would make sense
-as the contents of a =[plot: ]= style link
-
-maybe something like
-
-=[splot:sin(sqrt(x**2+y**2))/sqrt(x**2+y**2)]=
-
-which could read options from a =#+PLOT= line in the same way as
-plotting tables...
-
-** TODO automatic descriptive statistics with plot
-   :PROPERTIES:
-   :suggested-by: Samuel Wales
-   :END:
-
-2.  It might be nice to show descriptive statistics (I would show
-mean, median, geometric mean, standard deviation, min, max, range)
-somewhere while showing the plot, if you don't already do this.
-** TODO re-graph all graphs when publishing
+** MAYBE re-graph all graphs when publishing
 important sub-problem is how to cycle through all graphs, especially
 cycling through and re-graphing all graphs in a subtree, like the
 latex image command. (maybe even displaying the graph over the plot
@@ -80,14 +60,14 @@ link.
 [Carsten] To call a function at each table, you can use
 org-table-map-tables, defined in org.el.
 
-** TODO sources of data to plot [1/4]
+** MAYBE sources of data to plot [1/4]
 plotting functions should work with any list of data, not just
 tables... would probably want to plot from...
 - [X] tables
 - [ ] elisp lists
 - [ ] results of property searches (can be saved in tables)
 - [ ] comma/tab seperated strings
-** TODO add reading of parameters from elsewhere in the org-file
+** MAYBE add reading of parameters from elsewhere in the org-file
 Currently reading from adjacent =#+PLOT= lines, but would also like to
 read from the current subtree, or even global to the file
 
@@ -117,7 +97,7 @@ The command can read these by macthing
 would like to jump up to header sub-trees to find plotting options if
 none specified on near the table/link
 
-** TODO remove dependency on gnuplot-mode.el
+** MAYBE remove dependency on gnuplot-mode.el
 This shouldn't be hard to do, just sent to compilation buffer if
 gnuplot-mode is not available.  This is proving difficult
 
@@ -138,8 +118,32 @@ connection open so that plot windows will remain open."
 		  (sleep-for gnuplot-delay)
 		  (goto-char (point-max)))
 		(split-string script "\n" t))))))
+
+** MAYBE automatic descriptive statistics with plot
+   :PROPERTIES:
+   :suggested-by: Samuel Wales
+   :END:
+
+2.  It might be nice to show descriptive statistics (I would show
+mean, median, geometric mean, standard deviation, min, max, range)
+somewhere while showing the plot, if you don't already do this.
+
+** TODO support for plotting formulas
+gnuplot has capabilities for plotting formulas, this would make sense
+as the contents of a =[plot: ]= style link
+
+maybe something like
+
+=[splot:sin(sqrt(x**2+y**2))/sqrt(x**2+y**2)]=
+
+which could read options from a =#+PLOT= line in the same way as
+plotting tables...
  
-** TODO bugs [7/8]
+** TODO Documentation [0/2]
+- [ ] put example.org up on worg as a tutorial
+- [ ] add to the org.texi documentation
+
+** DONE bugs [8/8]
 Thanks to the org-mode mailing list for reporting problems
 
 - [X] after plotting 3d or grid data, sometime have to call the
@@ -147,7 +151,7 @@ Thanks to the org-mode mailing list for reporting problems
 - [X] parentheses inside of quotes for title break the regexp,
       similarly "'s inside of ()'s will probably be a problem for
       specifying labels
-- [ ] Got a "current buffer has no process" when tried from Windows
+- [X] Got a "current buffer has no process" when tried from Windows
       Native GNU Emacs 22.2.1
 - [X] can wander too far and read options from nearby graphs
 - [X] sometimes graphs just don't work, many times saving the org-file
