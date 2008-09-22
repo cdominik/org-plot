@@ -239,11 +239,11 @@ NUM-COLS controls the number of columns plotted in a 2-d plot."
 	 (setq plot-lines (list (format "'%s' with %s title ''"
 					data-file with)))))
       (add-to-script
-       (concat plot-cmd " " (mapconcat 'identity (reverse plot-lines) "\\\n    ,")))
+       (concat plot-cmd " " (mapconcat 'identity (reverse plot-lines) ",\\\n    ")))
       script)))
 
 ;;-----------------------------------------------------------------------------
-;; facad functions
+;; facade functions
 ;;;###autoload
 (defun org-plot/gnuplot (&optional params)
   "Plot table using gnuplot. Gnuplot options can be specified with PARAMS.
@@ -267,7 +267,8 @@ line directly before or after the table."
     ;; collect table and table information
     (let* ((data-file (make-temp-file "org-plot"))
 	   (table (org-table-to-lisp))
-	   (num-cols (length (first table))))
+	   (num-cols (length (if (eq (first table) 'hline) (second table)
+			       (first table)))))
       (while (equal 'hline (first table)) (setf table (cdr table)))
       (when (equal (second table) 'hline)
 	(setf params (plist-put params :labels (first table))) ;; headers to labels
