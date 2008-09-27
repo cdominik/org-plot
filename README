@@ -1,8 +1,14 @@
+This page is no longer being maintained.  As org-plot has been
+included into the most recent version of Org-Mode all further org-plot
+development will take place within org-mode. To find Org-Mode
+information and the latest versions see http://orgmode.org/
+
+--------------------------------------------------------------------------------
+
 org-plot.el --- Plotting from within org-mode
 
 Currently this provides functions for dumping information from
-org-mode tables to gnuplot.  Hopefully as this becomes more
-general/stable it will be incorporated into org-mode.
+org-mode tables to gnuplot.
 
 See:
  Emacs        | http://www.gnu.org/software/emacs/ 
